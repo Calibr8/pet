@@ -1,7 +1,7 @@
 <?php
 /**
  * @file
- *
+ * PET Class - Entity for PET.
  */
 
 namespace Drupal\pet\Entity;
@@ -18,11 +18,11 @@ use Drupal\pet\PetInterface;
  * @ingroup pet
  *
  * @ContentEntityType(
- *   id = "pets",
+ *   id = "pet",
  *   label = @Translation("Pet Entity"),
  *   handlers = {
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *     "list_builder" = "Drupal\pet\Entity\Controller\PetListBuilder",
+ *     "list_builder" = "Drupal\pet\Controller\PetListBuilder",
  *     "form" = {
  *       "add" = "Drupal\pet\Form\PetForm",
  *       "edit" = "Drupal\pet\Form\PetForm",
@@ -39,8 +39,8 @@ use Drupal\pet\PetInterface;
  *     "uuid" = "uuid",
  *   },
  *   links = {
- *     "edit-form" = "pets.edit",
- *     "delete-form" = "pets.delete",
+ *     "edit-form" = "pet.edit",
+ *     "delete-form" = "pet.delete",
  *   },
  * )
  *
