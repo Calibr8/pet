@@ -10,4 +10,60 @@ use Drupal\Core\Entity\ContentEntityInterface;
 
 interface PetInterface extends ContentEntityInterface {
 
-} 
+  /** Fields
+   */
+
+  /**
+   * Returns the template title.
+   *
+   * @return string
+   *   Title of the template.
+   */
+  public function getTitle();
+
+  /**
+   * Set the title for template.
+   *
+   * @param string $title
+   *   Title of template.
+   * @return object
+   *   Template.
+   */
+  public function setTitle($title);
+
+  public function getName();
+
+  public function setName($name);
+
+  public function getStatus();
+
+  public function setStatus($status);
+
+  public function getSubject();
+
+  public function setSubject($subject);
+
+  public function getMailbody();
+
+  public function setMailbody($mailbody);
+
+  public function getMailbodyPlain();
+
+  public function setMailbodyPlain($mailbody_plain);
+
+  public function getSendPlain();
+
+  public function setSendPlain($send_plain);
+
+  public function getReceipientCallback();
+
+  public function setReceipientCallback($receipient_callback);
+
+  public function getCCDefault();
+
+  public function setCCDefault($cc_default);
+
+  public function getBCCDefault();
+
+  public function setBCCDefault($bcc_default);
+}

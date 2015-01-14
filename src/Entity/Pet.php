@@ -37,6 +37,7 @@ use Drupal\pet\PetInterface;
  *     "id" = "id",
  *     "label" = "title",
  *     "uuid" = "uuid",
+ *     "name" = "name",
  *   },
  *   links = {
  *     "edit-form" = "pet.edit",
@@ -46,17 +47,6 @@ use Drupal\pet\PetInterface;
  *
  */
 class Pet extends ContentEntityBase implements PetInterface {
-
-  /** Fields
-   *
-   * protected $id;
-   * protected $title;
-   * protected $subject;
-   * protected $mail_body;
-   * protected $mail_body_plain;
-   * protected $cc_default;
-   * protected $bcc_default;
-   */
 
   /**
    * {@inheritdoc}
@@ -346,4 +336,104 @@ class Pet extends ContentEntityBase implements PetInterface {
     return $fields;
   }
 
-} 
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitle() {
+    return $this->get('title')->value;
+  }
+
+  /**
+   * Set the title for template.
+   *
+   * @param string $title
+   *   Title of template.
+   * @return object
+   *   Template.
+   */
+  public function setTitle($title) {
+    $this->set('title', $title);
+    return $this;
+  }
+
+  public function getName() {
+    return $this->get('name')->value;
+  }
+
+  public function setName($name) {
+    $this->set('name', $name);
+    return $this;
+  }
+
+  public function getStatus() {
+    return $this->get('status')->value;
+  }
+
+  public function setStatus($status) {
+    $this->set('status', $status);
+    return $this;
+  }
+
+  public function getSubject() {
+    return $this->get('subject')->value;
+  }
+
+  public function setSubject($subject) {
+    $this->set('subject', $subject);
+    return $this;
+  }
+
+  public function getMailbody() {
+    return $this->get('mail_body')->value;
+  }
+
+  public function setMailbody($mail_body) {
+    $this->set('mail_body', $mail_body);
+    return $this;
+  }
+
+  public function getMailbodyPlain() {
+    return $this->get('mail_body_plain');
+  }
+
+  public function setMailbodyPlain($mail_body_plain) {
+    $this->set('mail_body_plain', $mail_body_plain);
+    return $this;
+  }
+
+  public function getSendPlain() {
+    return $this->get('send_plain')->value;
+  }
+
+  public function setSendPlain($send_plain) {
+    $this->set('send_plain', $send_plain);
+    return $this;
+  }
+
+  public function getReceipientCallback() {
+    return $this->get('receipient_callback')->value;
+  }
+
+  public function setReceipientCallback($receipient_callback) {
+    $this->set('receipient_callback', $receipient_callback);
+    return $this;
+  }
+
+  public function getCCDefault() {
+    return $this->get('cc_default')->value;
+  }
+
+  public function setCCDefault($cc_default) {
+    $this->set('cc_default', $cc_default);
+    return $this;
+  }
+
+  public function getBCCDefault() {
+    return $this->get('bcc_default')->value;
+  }
+
+  public function setBCCDefault($bcc_default) {
+    $this->set('bcc_default', $bcc_default);
+    return $this;
+  }
+}
