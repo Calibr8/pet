@@ -52,9 +52,9 @@ interface PetInterface extends ContentEntityInterface {
 
   public function setSendPlain($send_plain);
 
-  public function getReceipientCallback();
+  public function getRecipientCallback();
 
-  public function setReceipientCallback($receipient_callback);
+  public function setRecipientCallback($recipient_callback);
 
   public function getCCDefault();
 

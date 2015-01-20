@@ -22,7 +22,7 @@ pet.add:
   requirements:
     _entity_create_access: 'pet'
 
-pet.edit:
+entity.pet.edit_form:
   path: '/admin/structure/pets/{pet}/edit'
   defaults:
     _entity_form: pet.edit
@@ -30,7 +30,7 @@ pet.edit:
   requirements:
     _entity_access: 'pet.edit'
 
-pet.delete:
+entity.pet.delete_form:
   path: '/admin/structure/pets/{pet}/delete'
   defaults:
     _entity_form: pet.delete

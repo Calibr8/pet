@@ -222,11 +222,12 @@ class Pet extends ContentEntityBase implements PetInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['receipient_callback'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Receipient Callback'))
+    $fields['recipient_callback'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Recipient Callback'))
       ->setDescription(t('A recipient callback function, if any.'))
       ->setSettings(array(
         'default_value' => '',
+        'max_length' => 255,
       ))
       ->setDisplayOptions('view', array(
         'label' => 'above',
@@ -240,8 +241,8 @@ class Pet extends ContentEntityBase implements PetInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['form_override'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Form Override'))
+    $fields['from_override'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('From Override'))
       ->setDescription(t('Email to override system from address.'))
       ->setSettings(array(
         'default_value' => '',
@@ -322,16 +323,6 @@ class Pet extends ContentEntityBase implements PetInterface {
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
-
-    $fields['langcode'] = BaseFieldDefinition::create('language')
-      ->setLabel(t('Language code'))
-      ->setDescription(t('The language code of PET entity.'));
-    $fields['created'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Created'))
-      ->setDescription(t('The time that the entity was created.'));
-    $fields['changed'] = BaseFieldDefinition::create('changed')
-      ->setLabel(t('Changed'))
-      ->setDescription(t('The time that the entity was last edited.'));
 
     return $fields;
   }
@@ -444,15 +435,15 @@ class Pet extends ContentEntityBase implements PetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getReceipientCallback() {
-    return $this->get('receipient_callback')->value;
+  public function getRecipientCallback() {
+    return $this->get('recipient_callback')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setReceipientCallback($receipient_callback) {
-    $this->set('receipient_callback', $receipient_callback);
+  public function setRecipientCallback($recipient_callback) {
+    $this->set('recipient_callback', $recipient_callback);
     return $this;
   }
 
@@ -490,14 +481,14 @@ class Pet extends ContentEntityBase implements PetInterface {
    * {@inheritdoc}
    */
   public function getFromOverride() {
-    return $this->get('form_override')->value;
+    return $this->get('from_override')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setFromOverride($from_override) {
-    $this->set('form_override', $from_override);
+    $this->set('from_override', $from_override);
     return $this;
   }
 }

@@ -113,7 +113,7 @@ class PetForm extends ContentEntityForm {
     $form['advanced']['recipient_callback'] = array(
       '#type' => 'textfield',
       '#title' => t('Recipient callback'),
-      '#default_value' => $pet->getReceipientCallback(),
+      '#default_value' => $pet->getRecipientCallback(),
       '#description' => t('The name of a function which will be called to retrieve a list of recipients. This function will be called if the query parameter uid=0 is in the URL. It will be called with one argument, the loaded node (if the PET takes one) or NULL if not. This function should return an array of recipients in the form uid|email, as in 136|bob@example.com. If the recipient has no uid, leave it blank but leave the pipe in. Providing the uid allows token substitution for the user.'),
       '#maxlength' => 255,
     );
