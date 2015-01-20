@@ -344,96 +344,160 @@ class Pet extends ContentEntityBase implements PetInterface {
   }
 
   /**
-   * Set the title for template.
-   *
-   * @param string $title
-   *   Title of template.
-   * @return object
-   *   Template.
+   * {@inheritdoc}
    */
   public function setTitle($title) {
     $this->set('title', $title);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getName() {
     return $this->get('name')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setName($name) {
     $this->set('name', $name);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getStatus() {
     return $this->get('status')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setStatus($status) {
     $this->set('status', $status);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getSubject() {
     return $this->get('subject')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setSubject($subject) {
     $this->set('subject', $subject);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getMailbody() {
     return $this->get('mail_body')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setMailbody($mail_body) {
     $this->set('mail_body', $mail_body);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getMailbodyPlain() {
-    return $this->get('mail_body_plain');
+    return $this->get('mail_body_plain')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setMailbodyPlain($mail_body_plain) {
     $this->set('mail_body_plain', $mail_body_plain);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getSendPlain() {
     return $this->get('send_plain')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setSendPlain($send_plain) {
     $this->set('send_plain', $send_plain);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getReceipientCallback() {
     return $this->get('receipient_callback')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setReceipientCallback($receipient_callback) {
     $this->set('receipient_callback', $receipient_callback);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getCCDefault() {
     return $this->get('cc_default')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setCCDefault($cc_default) {
     $this->set('cc_default', $cc_default);
     return $this;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function getBCCDefault() {
     return $this->get('bcc_default')->value;
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function setBCCDefault($bcc_default) {
     $this->set('bcc_default', $bcc_default);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFromOverride() {
+    return $this->get('form_override')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFromOverride($from_override) {
+    $this->set('form_override', $from_override);
     return $this;
   }
 }

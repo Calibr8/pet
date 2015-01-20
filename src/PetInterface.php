@@ -10,9 +10,6 @@ use Drupal\Core\Entity\ContentEntityInterface;
 
 interface PetInterface extends ContentEntityInterface {
 
-  /** Fields
-   */
-
   /**
    * Returns the template title.
    *
@@ -45,11 +42,11 @@ interface PetInterface extends ContentEntityInterface {
 
   public function getMailbody();
 
-  public function setMailbody($mailbody);
+  public function setMailbody($mail_body);
 
   public function getMailbodyPlain();
 
-  public function setMailbodyPlain($mailbody_plain);
+  public function setMailbodyPlain($mail_body_plain);
 
   public function getSendPlain();
 
@@ -66,4 +63,8 @@ interface PetInterface extends ContentEntityInterface {
   public function getBCCDefault();
 
   public function setBCCDefault($bcc_default);
+
+  public function getFromOverride();
+
+  public function setFromOverride($from_override);
 }
