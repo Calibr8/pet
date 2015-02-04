@@ -68,18 +68,11 @@ class Pet extends ContentEntityBase implements PetInterface {
       ->setLabel(t('ID'))
       ->setDescription(t('The internal identifier for any templates.'))
       ->setReadOnly(TRUE)
+      ->setSetting('unsigned', TRUE)
       ->setDisplayOptions('view', array(
-        'label' => 'above',
-        'type' => 'string',
-        'weight' => -10,
-      ))
-      ->setDisplayOptions('form', array(
-        'type' => 'machine_name',
-        'machine_name' => array(
-          'source' => array('title'),
-        ),
-        'weight' => -10,
-      ));
+          'weight' => -10,
+        )
+      );
 
     // Standard field, unique outside of the scope of the current project.
     $fields['uuid'] = BaseFieldDefinition::create('uuid')
@@ -90,28 +83,23 @@ class Pet extends ContentEntityBase implements PetInterface {
     $fields['module'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Module'))
       ->setDescription(t('The name of the providing module if the entity has been defined in code.'))
-      ->setSettings(array(
-        'default_value' => '',
-        'max_length' => 255,
-        'text_processing' => 0,
-      ));
+      ;
 
     $fields['name'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Machine Name'))
       ->setDescription(t('The machine name of the PET.'))
-      ->setSettings(array(
-        'default_value' => '',
-        'max_length' => 255,
-        'text_processing' => 0,
-      ))
+      ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
-        'weight' => -11,
       ))
       ->setDisplayOptions('form', array(
-        'type' => 'string',
-        'weight' => -11,
+        'type' => 'string_machine_name',
+        'weight' => 1,
+        'weight' => -13,
+        'machine_name' => array(
+          'source' => array('title'),
+        ),
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -119,19 +107,14 @@ class Pet extends ContentEntityBase implements PetInterface {
     $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
       ->setDescription(t('The human readable name of the template.'))
-      ->setSettings(array(
-        'default_value' => '',
-        'max_length' => 255,
-        'text_processing' => 0,
-      ))
+      ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
-        'weight' => -11,
       ))
       ->setDisplayOptions('form', array(
-        'type' => 'string',
-        'weight' => -11,
+        'type' => 'string_textfield',
+        'weight' => -14,
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -139,15 +122,18 @@ class Pet extends ContentEntityBase implements PetInterface {
     $fields['status'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('Status'))
       ->setDescription(t('The exportable status of the entity.'))
+      ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'integer',
+        'unsigned' => TRUE,
         'weight' => -12,
       ));
 
     $fields['subject'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Subject'))
       ->setDescription(t('The template subject.'))
+      ->setRequired(TRUE)
       ->setSettings(array(
         'default_value' => '',
         'max_length' => 255,
@@ -168,17 +154,13 @@ class Pet extends ContentEntityBase implements PetInterface {
     $fields['mail_body'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Mail Body'))
       ->setDescription(t('The template body.'))
-      ->setSettings(array(
-        'default_value' => '',
-      ))
-      ->setDisplayOptions('view', array(
-        'label' => 'above',
-        'type' => 'text_string',
-        'weight' => -8,
-      ))
+      ->setDefaultValue(NULL)
       ->setDisplayOptions('form', array(
-        'type' => 'string',
+        'type' => 'string_textarea',
         'weight' => -8,
+        'settings' => array(
+          'rows' => 4,
+        ),
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -186,38 +168,25 @@ class Pet extends ContentEntityBase implements PetInterface {
     $fields['mail_body_plain'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Mail Body Plain'))
       ->setDescription(t('The template body in plain text form.'))
-      ->setSettings(array(
-        'default_value' => '',
-      ))
-      ->setDisplayOptions('view', array(
-        'label' => 'above',
-        'type' => 'string',
-        'weight' => -7,
-      ))
       ->setDisplayOptions('form', array(
-        'type' => 'string',
+        'type' => 'string_textarea',
         'weight' => -7,
+        'settings' => array(
+          'rows' => 4,
+        ),
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['send_plain'] = BaseFieldDefinition::create('list_integer')
-      ->setLabel(t('Send Plain'))
-      ->setDescription(t('If true send email as plain text.'))
-      ->setSettings(array(
-        'allowed_values' => array(
-          '0' => 'No',
-          '1' => 'Yes',
-        ),
-      ))
-      ->setDisplayOptions('view', array(
-        'label' => 'above',
-        'type' => 'string',
-        'weight' => -6,
-      ))
+    $fields['send_plain'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Send only plain text'))
+      ->setDescription(t('Send email as plain text only. If checked, only the plain text here will be sent. If unchecked both will be sent as multipart mime.Send email as plain text only. If checked, only the plain text here will be sent. If unchecked both will be sent as multipart mime..'))
       ->setDisplayOptions('form', array(
-        'type' => 'integer',
         'weight' => -6,
+        'type' => 'boolean_checkbox',
+        'settings' => array(
+          'display_label' => TRUE,
+        ),
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
@@ -241,7 +210,7 @@ class Pet extends ContentEntityBase implements PetInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['from_override'] = BaseFieldDefinition::create('string')
+    $fields['from_override'] = BaseFieldDefinition::create('email')
       ->setLabel(t('From Override'))
       ->setDescription(t('Email to override system from address.'))
       ->setSettings(array(
@@ -251,47 +220,41 @@ class Pet extends ContentEntityBase implements PetInterface {
       ))
       ->setDisplayOptions('view', array(
         'label' => 'above',
-        'type' => 'string',
+        'type' => 'email',
         'weight' => -4,
       ))
       ->setDisplayOptions('form', array(
-        'type' => 'string',
+        'type' => 'email',
         'weight' => -4,
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['cc_default'] = BaseFieldDefinition::create('string_long')
+    $fields['cc_default'] = BaseFieldDefinition::create('email')
       ->setLabel(t('CC Default'))
       ->setDescription(t('Optional cc emails.'))
-      ->setSettings(array(
-        'default_value' => '',
-      ))
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
         'weight' => -3,
       ))
       ->setDisplayOptions('form', array(
-        'type' => 'string',
+        'type' => 'email',
         'weight' => -3,
       ))
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['bcc_default'] = BaseFieldDefinition::create('string_long')
+    $fields['bcc_default'] = BaseFieldDefinition::create('email')
       ->setLabel(t('BCC Default'))
       ->setDescription(t('Optional bcc emails.'))
-      ->setSettings(array(
-        'default_value' => '',
-      ))
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
         'weight' => -2,
       ))
       ->setDisplayOptions('form', array(
-        'type' => 'string',
+        'type' => 'email',
         'weight' => -2,
       ))
       ->setDisplayConfigurable('form', TRUE)
@@ -311,17 +274,7 @@ class Pet extends ContentEntityBase implements PetInterface {
         'type' => 'entity_reference',
         'weight' => -1,
       ))
-      ->setDisplayOptions('form', array(
-        'type' => 'entity_reference_autocomplete',
-        'settings' => array(
-          'match_operator' => 'CONTAINS',
-          'size' => 60,
-          'autocomplete_type' => 'tags',
-          'placeholder' => '',
-        ),
-        'weight' => -1,
-      ))
-      ->setDisplayConfigurable('form', TRUE)
+      ->setDisplayConfigurable('form', FALSE)
       ->setDisplayConfigurable('view', TRUE);
 
     return $fields;

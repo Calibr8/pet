@@ -8,8 +8,7 @@
  * Loads a PET by ID.
  */
 function pet_load($pid) {
-  $pets = pet_load_multiple(array($pid), array());
-  return $pets ? reset($pets) : FALSE;
+  return \Drupal\pet\Entity\Pet::load($pid);
 }
 
 /**
