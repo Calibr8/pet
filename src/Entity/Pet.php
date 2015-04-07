@@ -40,8 +40,9 @@ use Drupal\pet\PetInterface;
  *     "name" = "name",
  *   },
  *   links = {
- *     "edit-form" = "pet.edit",
- *     "delete-form" = "pet.delete",
+ *     "canonical" = "/admin/structure/pets/{pet}",
+ *     "delete-form" = "/admin/structure/pets/{pet}/delete",
+ *     "edit-form" = "/admin/structure/pets/{pet}/edit",
  *   },
  * )
  *
@@ -82,8 +83,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['module'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Module'))
-      ->setDescription(t('The name of the providing module if the entity has been defined in code.'))
-      ;
+      ->setDescription(t('The name of the providing module if the entity has been defined in code.'));
 
     $fields['name'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Machine Name'))
@@ -106,7 +106,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
-      ->setDescription(t('The human readable name of the template.'))
+      ->setDescription(t('A short, descriptive title for this email template. It will be used in administrative interfaces, and in page titles and menu items.'))
       ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'above',
@@ -132,7 +132,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['subject'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Subject'))
-      ->setDescription(t('The template subject.'))
+      ->setDescription(t('The subject line of the email template. May include tokens of any token type specified below.'))
       ->setRequired(TRUE)
       ->setSettings(array(
         'default_value' => '',
@@ -153,7 +153,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['mail_body'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Mail Body'))
-      ->setDescription(t('The template body.'))
+      ->setDescription(t('The body of the email template. May include tokens of any token type specified below.'))
       ->setDefaultValue(NULL)
       ->setDisplayOptions('form', array(
         'type' => 'string_textarea',
@@ -167,7 +167,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['mail_body_plain'] = BaseFieldDefinition::create('string_long')
       ->setLabel(t('Mail Body Plain'))
-      ->setDescription(t('The template body in plain text form.'))
+      ->setDescription(t('The plain text body of the email template. May include tokens of any token type specified below. If left empty Mime Mail will use drupal_html_to_text() to create a plain text version of the email.'))
       ->setDisplayOptions('form', array(
         'type' => 'string_textarea',
         'weight' => -7,
@@ -193,7 +193,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['recipient_callback'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Recipient Callback'))
-      ->setDescription(t('A recipient callback function, if any.'))
+      ->setDescription(t('The name of a function which will be called to retrieve a list of recipients. This function will be called if the query parameter uid=0 is in the URL. It will be called with one argument, the loaded node (if the PET takes one) or NULL if not. This function should return an array of recipients in the form uid|email, as in 136|bob@example.com. If the recipient has no uid, leave it blank but leave the pipe in. Providing the uid allows token substitution for the user.'))
       ->setSettings(array(
         'default_value' => '',
         'max_length' => 255,
@@ -232,7 +232,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['cc_default'] = BaseFieldDefinition::create('email')
       ->setLabel(t('CC Default'))
-      ->setDescription(t('Optional cc emails.'))
+      ->setDescription(t('Emails to be copied by default for each mail sent to recipient. Enter emails separated by lines or commas.'))
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
@@ -247,7 +247,7 @@ class Pet extends ContentEntityBase implements PetInterface {
 
     $fields['bcc_default'] = BaseFieldDefinition::create('email')
       ->setLabel(t('BCC Default'))
-      ->setDescription(t('Optional bcc emails.'))
+      ->setDescription(t('Emails to be blind copied by default for each mail sent to recipient. Enter emails separated by lines or commas.'))
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',

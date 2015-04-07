@@ -41,10 +41,10 @@ class PetForm extends ContentEntityForm {
         ->hasPermission('administer previewable email templates'),
     );
     $form['cc_default']['#group'] = 'advanced';
-    $form['cc_default']['#description'] = t('Emails to be copied by default for each mail sent to recipient. Enter emails separated by lines or commas.');
     $form['bcc_default']['#group'] = 'advanced';
     $form['from_override']['#group'] = 'advanced';
     $form['recipient_callback']['#group'] = 'advanced';
+    $form['actions']['submit']['#value'] = t('Save Template');
 
     // @todo : #2366851 token integration
     //$form['tokens'] = pet_token_help();

@@ -22,6 +22,14 @@ pet.add:
   requirements:
     _entity_create_access: 'pet'
 
+entity.pet.canonical:
+  path: '/admin/structure/pets/{pet}/edit'
+  defaults:
+    _entity_form: pet.edit
+    _title: 'Edit Previewable Email Template'
+  requirements:
+    _entity_access: 'pet.edit'
+
 entity.pet.edit_form:
   path: '/admin/structure/pets/{pet}/edit'
   defaults:
