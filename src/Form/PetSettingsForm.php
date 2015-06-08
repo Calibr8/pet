@@ -27,7 +27,7 @@ class PetSettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    \Drupal::config('pet.settings')
+    \Drupal::configFactory()->getEditable('pet.settings')
       ->set('pet_logging', $form_state->getValue('pet_logging'))
       ->save();
   }
@@ -39,9 +39,9 @@ class PetSettingsForm extends FormBase {
     $pet_logging = \Drupal::config('pet.settings')->get('pet_logging');
 
     $form['logging'] = array(
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => t('PET log settings'),
-      '#collapsible' => FALSE,
+      '#open' => TRUE,
     );
 
     $options = array(
