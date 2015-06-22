@@ -45,3 +45,11 @@ entity.pet.delete_form:
     _title: 'Delete Previewable Email Template'
   requirements:
     _entity_access: 'pet.delete'
+
+pet.preview:
+  path: '/pet/{pet}'
+  defaults:
+    _form: '\Drupal\pet\Form\PetPreviewForm'
+    _title: 'Previewable Email Template Preview'
+  requirements:
+    _permission: 'view PETs entity'
