@@ -75,6 +75,8 @@ class PetPreviewForm extends FormBase {
       );
     }
 
+    $form['tokens'] = pet_token_help();
+
     $form['submit'] = array(
       '#type' => 'submit',
       '#value' => t('Preview'),

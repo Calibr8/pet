@@ -26,11 +26,11 @@ class PetForm extends ContentEntityForm {
     $form['send_plain']['#group'] = 'mimemail';
     $form['mail_body_plain']['#group'] = 'mimemail';
 
+    $form['mimemail']['#description'] = t('HTML email support is most easily provided by the <a href="@url">Mime Mail</a> module, which must be installed and enabled.', array('@url' => 'http://drupal.org/project/mimemail'));
     // @todo : #2366853 - Mime mail integration
     if (!pet_has_mimemail()) {
-      $form['mimemail']['#description'] = t('HTML email support is most easily provided by the <a href="@url">Mime Mail</a> module, which must be installed and enabled.', array('@url' => 'http://drupal.org/project/mimemail'));
-      $form['mail_body_plain']['#disabled'] = TRUE;
-      $form['send_plain']['#disabled'] = TRUE;
+      unset($form['mail_body_plain']);
+      unset($form['send_plain']);
     }
 
     $form['advanced'] = array(
@@ -46,8 +46,7 @@ class PetForm extends ContentEntityForm {
     $form['recipient_callback']['#group'] = 'advanced';
     $form['actions']['submit']['#value'] = t('Save Template');
 
-    // @todo : #2366851 token integration
-    //$form['tokens'] = pet_token_help();
+    $form['tokens'] = pet_token_help();
 
     return $form;
   }

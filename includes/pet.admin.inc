@@ -395,31 +395,6 @@ function pet_user_form_submit($form, &$form_state) {
 }
 
 /**
- * Helper function to provide token help to template construction form and template use form.
- */
-function pet_token_help() {
-  if (module_exists('token')) {
-    $tokens = array(
-      '#title' => t('Replacement patterns'),
-      '#type' => 'fieldset',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#description' => t('Make sure that the tokens you choose are available to your template when previewed. The list below includes the standard Nodes and Users groups, as well as global tokens. See also hook_pet_substitutions_alter().'),
-    );
-    $tokens['token_tree'] = array(
-      '#theme' => 'token_tree',
-      '#token_types' => array('node', 'user'),
-    );
-  }
-  else {
-    $tokens = array(
-      '#markup' => '<p>' . t('Enable the <a href="@drupal-token">Token module</a> to view the available token browser.', array('@drupal-token' => 'http://drupal.org/project/token')) . '</p>',
-    );
-  }
-  return $tokens;
-}
-
-/**
  * Return user to starting point on template multi-form.
  */
 function pet_user_form_back($form, &$form_state) {

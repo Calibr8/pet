@@ -8,7 +8,9 @@ namespace Drupal\pet\Controller;
 
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
+use Drupal\Core\Url;
 use Drupal\pet\Entity;
+use Drupal\pet\PetInterface;
 
 class PetListBuilder extends EntityListBuilder {
 
@@ -19,6 +21,7 @@ class PetListBuilder extends EntityListBuilder {
     $header['id'] = $this->t('PET ID');
     $header['label'] = $this->t('Label');
     $header['subject'] = $this->t('Subject');
+    $header['status'] = $this->t('Status');
     return $header + parent::buildHeader();
   }
 
@@ -42,12 +45,18 @@ class PetListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRow(EntityInterface $entity) {
+  public function buildRow(PetInterface $entity) {
     $pid = $entity->id();
     $row['id'] = $pid;
-    //$url = \Drupal::url('pet.edit',array('pet'=>$pid));
-    $row['label'] = $entity->getTitle().t(' (Machine name: ') . $entity->getName() .')';
+    $url = Url::fromRoute('pet.preview', array('pet' => $pid));
+    $row['label']['data'] = array(
+      '#type' => 'link',
+      '#title' => $entity->getTitle(),
+      '#suffix' => '<small> ' . t(' (Machine name: ') . $entity->getName() . ')</small>',
+      '#url' => $url,
+    );
     $row['subject'] = $entity->getSubject();
+    $row['status'] = $entity->getStatus() == 0 ? t('Custom') : $entity->getStatus();
     return $row + parent::buildRow($entity);
   }
 
