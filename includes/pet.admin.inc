@@ -403,21 +403,6 @@ function pet_user_form_back($form, &$form_state) {
 }
 
 /**
- * Generate a preview of the tokenized email for the first in the list.
- */
-function pet_make_preview(&$form_state) {
-  $params = array(
-    'pet_uid' => $form_state['storage']['recipients'][0]['uid'],
-    'pet_nid' => $form_state['storage']['nid'],
-  );
-  $subs = pet_substitutions($form_state['storage']['pet'], $params);
-
-  $form_state['storage']['subject_preview'] = token_replace($form_state['values']['subject'], $subs);
-  $form_state['storage']['body_preview'] = token_replace(pet_isset_or($form_state['values']['mail_body']), $subs);
-  $form_state['storage']['body_preview_plain'] = token_replace(pet_isset_or($form_state['values']['mail_body_plain']), $subs);
-}
-
-/**
  * Validate existence of a non-empty recipient list free of email errors.
  */
 function pet_validate_recipients($form_state, &$recipients) {
@@ -481,36 +466,6 @@ function pet_callback_recipients($form_state) {
   }
 
   return NULL;
-}
-
-/**
- * Return formatted list of PET recipients for preview display.
- */
-function pet_recipients_formatted($recipients) {
-  $output = '';
-  if (is_array($recipients)) {
-    foreach ($recipients as $recipient) {
-      $output .= $recipient['mail'] . ' ';
-      $output .= $recipient['uid'] ? t('(user @uid)', array('@uid' => $recipient['uid'])) : t('(no user id)');
-      $output .= "\n";
-    }
-    return $output;
-  }
-}
-
-/**
- * Return TRUE if a $val is a natural number (integer 1, 2, 3, ...).  Base can
- * be changed to zero if desired.
- */
-function pet_is_natural($val, $base = 1) {
-  if (!isset($val)) {
-    return FALSE;
-  }
-  $return = ((string) $val === (string) (int) $val);
-  if ($return && intval($val) < $base) {
-    $return = FALSE;
-  }
-  return $return;
 }
 
 /**

@@ -45,7 +45,7 @@ class PetListBuilder extends EntityListBuilder {
   /**
    * {@inheritdoc}
    */
-  public function buildRow(PetInterface $entity) {
+  public function buildRow(EntityInterface $entity) {
     $pid = $entity->id();
     $row['id'] = $pid;
     $url = Url::fromRoute('pet.preview', array('pet' => $pid));

@@ -251,7 +251,8 @@ function pet_substitutions($pet, $params) {
   }
 
   // Give modules the opportunity to add their own token types/objects
-  drupal_alter('pet_substitutions', $substitutions, $params);
+  // @todo 
+  // drupal_alter('pet_substitutions', $substitutions, $params);
   return $substitutions;
 }
 
@@ -319,4 +320,34 @@ function pet_token_help() {
     );
   }
   return $tokens;
+}
+
+/**
+ * Return TRUE if a $val is a natural number (integer 1, 2, 3, ...).  Base can
+ * be changed to zero if desired.
+ */
+function pet_is_natural($val, $base = 1) {
+  if (!isset($val)) {
+    return FALSE;
+  }
+  $return = ((string) $val === (string) (int) $val);
+  if ($return && intval($val) < $base) {
+    $return = FALSE;
+  }
+  return $return;
+}
+
+/**
+ * Return formatted list of PET recipients for preview display.
+ */
+function pet_recipients_formatted($recipients) {
+  $output = '';
+  if (is_array($recipients)) {
+    foreach ($recipients as $recipient) {
+      $output .= $recipient['mail'] . ' ';
+      $output .= $recipient['uid'] ? t('(user @uid)', array('@uid' => $recipient['uid'])) : t('(no user id)');
+      $output .= "\n";
+    }
+    return $output;
+  }
 }
