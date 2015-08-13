@@ -10,7 +10,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Url;
 use Drupal\pet\Entity;
-use Drupal\pet\PetInterface;
 
 class PetListBuilder extends EntityListBuilder {
 

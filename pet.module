@@ -3,12 +3,15 @@
  * @file
  * Previewable Email Template module.
  */
+use Drupal\node\Entity\Node;
+use Drupal\pet\Entity\Pet;
+use Drupal\user\Entity\User;
 
 /**
  * Loads a PET by ID.
  */
 function pet_load($pid) {
-  return \Drupal\pet\Entity\Pet::load($pid);
+  return Pet::load($pid);
 }
 
 /**
@@ -97,11 +100,13 @@ function pet_lookup_uid($mail) {
 function pet_send_mail($name, $recipients, $options) {
   $pet = pet_load($name);
   if (!$pet) {
-    watchdog('pet', 'Unable to load PET %name.', array('%name' => $name), WATCHDOG_ERROR);
+    \Drupal::logger('pet')
+      ->error('Unable to load PET %name.', array('%name' => $name));
     return;
   }
   if (!is_array($recipients) || count($recipients) < 1) {
-    watchdog('pet', 'At least one recipient must be provided for PET %name.', array('%name' => $name), WATCHDOG_NOTICE);
+    \Drupal::logger('pet')
+      ->notice('At least one recipient must be provided for PET %name.', array('%name' => $name));
     return;
   }
 
@@ -118,7 +123,7 @@ function pet_send_mail($name, $recipients, $options) {
     $from = $pet->from_override;
   }
   else {
-    $from = variable_get('site_mail', ini_get('sendmail_from'));
+    $from = \Drupal::config('system.site')->get('mail');
   }
 
   // Store data in params in case a module wants to act on them somehow
@@ -139,7 +144,7 @@ function pet_send_mail($name, $recipients, $options) {
       $params['pet_uid'] = $recipient['uid'];
     }
     else {
-      // Strip leading uid for backward compatability
+      // Strip leading uid for backward compatibility
       $mail = preg_replace('/^[0-9]*\|/', '', $recipient);
       $params['pet_to'] = $mail;
       $params['pet_uid'] = pet_lookup_uid($mail);
@@ -175,11 +180,12 @@ function pet_send_mail($name, $recipients, $options) {
  * @see hook_pet_substitutions_alter()
  */
 function pet_send_one_mail($pet, $params) {
-  $pet_logging = variable_get('pet_logging', 0);
+  $pet_logging = \Drupal::config('pet.settings')->get('pet_logging');
 
   if (!pet_is_valid($pet)) {
     if ($pet_logging < 2) {
-      watchdog('pet', 'Invalid PET object in pet_send_one_mail().', array(), WATCHDOG_ERROR);
+      \Drupal::logger('pet')
+        ->error('Invalid PET object in pet_send_one_mail().');
     }
     else {
       drupal_set_message(t('Invalid PET object in pet_send_one_mail().'), 'error');
@@ -189,7 +195,8 @@ function pet_send_one_mail($pet, $params) {
 
   if (empty($params['pet_from'])) {
     if ($pet_logging < 2) {
-      watchdog('pet', 'Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet->name), WATCHDOG_ERROR);
+      \Drupal::logger('pet')
+        ->error('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet->name));
     }
     else {
       drupal_set_message(t('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet->name)), 'error');
@@ -199,7 +206,8 @@ function pet_send_one_mail($pet, $params) {
 
   if (empty($params['pet_to'])) {
     if ($pet_logging < 2) {
-      watchdog('pet', 'Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet->name), WATCHDOG_ERROR);
+      \Drupal::logger('pet')
+        ->error('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet->name));
     }
     else {
       drupal_set_message(t('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet->name)), 'error');
@@ -212,13 +220,14 @@ function pet_send_one_mail($pet, $params) {
 
   $params['pet'] = $pet;
   $substitutions = pet_substitutions($pet, $params);
-  $params['subject'] = token_replace($pet->subject, $substitutions, array('clear' => TRUE));
-  $params['body'] = token_replace($pet->mail_body, $substitutions, array('clear' => TRUE));
+  $token = \Drupal::token();
+  $params['subject'] = $token->replace($pet->subject, $substitutions, array('clear' => TRUE));
+  $params['body'] = $token->replace($pet->mail_body, $substitutions, array('clear' => TRUE));
 
   // Provided for Mime Mail module; alternate text-only form for multipart MIME
   $mail_body_plain = trim($pet->mail_body_plain);
   if (!empty($mail_body_plain)) {
-    $params['plaintext'] = token_replace($pet->mail_body_plain, $substitutions, array('clear' => TRUE));
+    $params['plaintext'] = $token->replace($pet->mail_body_plain, $substitutions, array('clear' => TRUE));
   }
 
   // Provided for Mime Mail module; send ONLY plain text
@@ -226,7 +235,8 @@ function pet_send_one_mail($pet, $params) {
 
   $message = drupal_mail('pet', $pet->name, $params['pet_to'], language_default(), $params, $params['pet_from']);
   if ($message['send'] && $pet_logging == 0) {
-    watchdog('pet', 'Successfully sent email to %recipient', array('%recipient' => $params['pet_to']));
+    \Drupal::logger('pet')
+      ->notice('Successfully sent email to %recipient', array('%recipient' => $params['pet_to']));
   }
   // return message, useful for show custom message, based email send status
   return $message;
@@ -242,16 +252,16 @@ function pet_substitutions($pet, $params) {
   // Standard substitutions
   $substitutions['global'] = NULL;
   if (!empty($uid)) {
-    $user = user_load($uid);
+    $user = User::load($uid);
     $substitutions['user'] = $user;
   }
   if (!empty($nid)) {
-    $node = node_load($nid);
+    $node = Node::load($nid);
     $substitutions['node'] = $node;
   }
 
   // Give modules the opportunity to add their own token types/objects
-  // @todo 
+  // @todo Replace with hook_alter implementation.
   // drupal_alter('pet_substitutions', $substitutions, $params);
   return $substitutions;
 }

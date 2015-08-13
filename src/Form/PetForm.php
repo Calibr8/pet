@@ -6,10 +6,9 @@
 
 namespace Drupal\pet\Form;
 
-use Drupal\Core\Entity\EntityTypeInterface;
-use Drupal\pet\Entity;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\pet\Entity;
 
 class PetForm extends ContentEntityForm {
 

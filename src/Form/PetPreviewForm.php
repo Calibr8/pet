@@ -8,8 +8,9 @@ namespace Drupal\pet\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\pet\PetInterface;
 use Drupal\pet\Entity;
+use Drupal\pet\PetInterface;
+use Drupal\user\Entity\User;
 
 class PetPreviewForm extends FormBase {
 
@@ -26,7 +27,6 @@ class PetPreviewForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state, PetInterface $pet = NULL) {
     $body_description = t('Review and edit standard template before previewing. This will not change the template for future emailings, just for this one. To change the template permanently, go to the template page. You may use the tokens below.');
     $storage = $form_state->getStorage();
-    kint($storage);
     if (pet_isset_or($storage['step']) == 3) {
       drupal_set_message(t('Email(s) sent'));
       $form_state->setStorage(array());
@@ -55,7 +55,7 @@ class PetPreviewForm extends FormBase {
         else {
           $default_mail = '';
           if ($uid) {
-            if ($account = user_load($uid)) {
+            if ($account = User::load($uid)) {
               $default_mail = $account->mail;
             }
             else {
@@ -65,7 +65,7 @@ class PetPreviewForm extends FormBase {
         }
         $form['recipients'] = array(
           '#title' => t('To'),
-          '#type' => 'textarea',
+          '#type' => 'email',
           '#required' => TRUE,
           '#rows' => 3,
           '#default_value' => $default_mail,
@@ -79,14 +79,14 @@ class PetPreviewForm extends FormBase {
         );
         $form['copies']['cc'] = array(
           '#title' => t('Cc'),
-          '#type' => 'textarea',
+          '#type' => 'email',
           '#rows' => 3,
           '#default_value' => pet_isset_or($storage['cc']) ? $storage['cc'] : $pet->getCCDefault(),
           '#description' => t('Enter any copied emails separated by lines or commas.'),
         );
         $form['copies']['bcc'] = array(
           '#title' => t('Bcc'),
-          '#type' => 'textarea',
+          '#type' => 'email',
           '#rows' => 3,
           '#default_value' => pet_isset_or($storage['bcc']) ? $storage['bcc'] : $pet->getBCCDefault(),
           '#description' => t('Enter any blind copied emails separated by lines or commas.'),
@@ -226,18 +226,20 @@ class PetPreviewForm extends FormBase {
       case 1:
         $form_state->setRebuild(TRUE);
         $storage['recipients_raw'] = $values['recipients'];
+        $storage['recipients'] = $values['recipients'];
         $storage['subject'] = $values['subject'];
         $storage['mail_body'] = pet_isset_or($values['mail_body']);
         $storage['mail_body_plain'] = pet_isset_or($values['mail_body_plain']);
         $storage['cc'] = $values['cc'];
         $storage['bcc'] = $values['bcc'];
+        $form_state->setStorage($storage);
         $this->pet_make_preview($form_state);
         $storage = $form_state->getStorage();
         break;
 
       case 2:
         $form_state->setRebuild(TRUE);
-        $name = $storage['pet']->name;
+        $pet = $storage['pet'];
         $recipients = $storage['recipients'];
         $options = array(
           'nid' => $storage['nid'],
@@ -248,7 +250,7 @@ class PetPreviewForm extends FormBase {
           'cc' => $storage['cc'],
           'bcc' => $storage['bcc'],
         );
-        pet_send_mail($name, $recipients, $options);
+        pet_send_mail($pet->id(), $recipients, $options);
         break;
     }
 
@@ -259,11 +261,11 @@ class PetPreviewForm extends FormBase {
   /**
    * Generate a preview of the tokenized email for the first in the list.
    */
-  function pet_make_preview(FormStateInterface &$form_state) {
+  public function pet_make_preview(FormStateInterface &$form_state) {
     $values = $form_state->getValues();
     $storage = $form_state->getStorage();
     $params = array(
-      'pet_uid' => $storage['recipients'][0]['uid'],
+      'pet_uid' => is_array($storage['recipients'])? $storage['recipients'][0]['uid']: NULL,
       'pet_nid' => $storage['nid'],
     );
     $subs = pet_substitutions($storage['pet'], $params);
