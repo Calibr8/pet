@@ -67,7 +67,6 @@ class PetPreviewForm extends FormBase {
           '#title' => t('To'),
           '#type' => 'email',
           '#required' => TRUE,
-          '#rows' => 3,
           '#default_value' => $default_mail,
           '#description' => t('Enter the recipient(s) separated by lines or commas. A separate email will be sent to each, with token substitution if the email corresponds to a site user.'),
           '#disabled' => $recipient_callback,
@@ -140,7 +139,8 @@ class PetPreviewForm extends FormBase {
           '#type' => 'textarea',
           '#title' => t('To'),
           '#rows' => 4,
-          '#value' => pet_recipients_formatted($storage['recipients']),
+          //'#value' => pet_recipients_formatted($storage['recipients']),
+          '#value' => $storage['recipients'],
           '#disabled' => TRUE,
         );
         if ($values['cc']) {

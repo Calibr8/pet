@@ -19,7 +19,7 @@ class PetAccessControlHandler extends EntityAccessControlHandler {
    * Link the activities to the permissions. checkAccess is called with the
    * $operation as defined in the routing.yml file.
    */
-  protected function checkAccess(EntityInterface $entity, $operation, $langcode, AccountInterface $account) {
+  protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
     switch ($operation) {
       case 'view':
         return AccessResult::allowedIfHasPermission($account, 'view PET entity');
