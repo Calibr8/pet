@@ -338,7 +338,7 @@ function pet_token_help() {
       '#description' => t('Make sure that the tokens you choose are available to your template when previewed. The list below includes the standard Nodes and Users groups, as well as global tokens. See also hook_pet_substitutions_alter().'),
     );
     $tokens['token_tree'] = array(
-      '#theme' => 'token_tree',
+      '#theme' => 'token_tree_link',
       '#token_types' => array('node', 'user'),
     );
   }
