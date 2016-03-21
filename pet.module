@@ -134,8 +134,8 @@ function pet_send_mail($name, $recipients, $options) {
   if (pet_isset_or($options['from'])) {
     $from = $options['from'];
   }
-  elseif ($pet->from_override) {
-    $from = $pet->from_override;
+  elseif ($pet->getFromOverride()) {
+    $from = $pet->getFromOverride();
   }
   else {
     $from = \Drupal::config('system.site')->get('mail');
