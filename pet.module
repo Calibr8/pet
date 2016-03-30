@@ -16,39 +16,56 @@ function pet_load($pid) {
 }
 
 /**
+ * Loads pet based on machine name.
+ *
+ * @param $name string
+ *   Machine name of pet.
+ *
+ * @return bool|\Drupal\pet\Entity\Pet
+ *   Returns pet entity if found else false.
+ */
+function pet_load_by_name($name) {
+  $query = \Drupal::entityQuery('pet')
+    ->condition('name', $name)
+    ->execute();
+  if ($query) {
+    $ids = key($query);
+    return Pet::load($ids);
+  }
+  return FALSE;
+}
+
+/**
  * Loads multiple PETs by ID or based on a set of conditions.
  *
- * @see entity_load()
+ * @see entity_load_multiple()
  *
- * @param $pids
+ * @param array $pids
  *   An array of PET IDs.
- * @param $conditions
- *   An array of conditions on the {pets} table in the form
- *     'field' => $value.
- * @param $reset
+ * @param bool $reset
  *   Whether to reset the internal PET loading cache.
  *
- * @return
+ * @return \Drupal\Core\Entity\EntityInterface|null
  *   An array of PET objects indexed by pid.
  */
-function pet_load_multiple($pids = array(), $conditions = array(), $reset = FALSE) {
-  return entity_load('pet', $pids, $conditions, $reset);
+function pet_load_multiple($pids = array(),  $reset = FALSE) {
+  return Pet::loadMultiple('pet', $pids, $reset);
 }
 
 /**
  * Entity uri callback.
  */
-function pet_uri($pet) {
+function pet_uri(Pet $pet) {
   return array(
-    'path' => 'pet/' . $pet->name,
+    'path' => 'pet/' . $pet->getName(),
   );
 }
 
 /**
  * Title callback for form template page.
  */
-function pet_page_title($pet) {
-  return $pet->title;
+function pet_page_title(Pet $pet) {
+  return $pet->getTitle();
 }
 
 /**
@@ -107,16 +124,18 @@ function pet_send_mail($name, $recipients, $options) {
   $pet = pet_load($name);
   if (!$pet) {
     \Drupal::logger('pet')
-        ->error('Unable to load PET %name.', array('%name' => $pet->getName()));
+      ->error('Unable to load PET %name.', array('%name' => $pet->getName()));
     return;
   }
   if (is_array($recipients) == FALSE) {
     $recipients = array($recipients);
   }
-  else if (is_array($recipients) == TRUE && count($recipients) < 1) {
-    \Drupal::logger('pet')
+  else {
+    if (is_array($recipients) == TRUE && count($recipients) < 1) {
+      \Drupal::logger('pet')
         ->notice('At least one recipient must be provided for PET %name.', array('%name' => $pet->getName()));
-    return;
+      return;
+    }
   }
 
   // Override subject and body if necessary
@@ -194,13 +213,13 @@ function pet_send_mail($name, $recipients, $options) {
  *
  * @see hook_pet_substitutions_alter()
  */
-function pet_send_one_mail($pet, $params) {
+function pet_send_one_mail(Pet $pet, $params) {
   $pet_logging = \Drupal::config('pet.settings')->get('pet_logging');
 
   if (!pet_is_valid($pet)) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-          ->error('Invalid PET object in pet_send_one_mail().');
+        ->error('Invalid PET object in pet_send_one_mail().');
     }
     else {
       drupal_set_message(t('Invalid PET object in pet_send_one_mail().'), 'error');
@@ -212,7 +231,7 @@ function pet_send_one_mail($pet, $params) {
   if (empty($params['pet_from'])) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-          ->error('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name));
+        ->error('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name));
     }
     else {
       drupal_set_message(t('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name)), 'error');
@@ -223,7 +242,7 @@ function pet_send_one_mail($pet, $params) {
   if (empty($params['pet_to'])) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-          ->error('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name));
+        ->error('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name));
     }
     else {
       drupal_set_message(t('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name)), 'error');
@@ -251,10 +270,11 @@ function pet_send_one_mail($pet, $params) {
 
   $language_interface = \Drupal::languageManager()->getCurrentLanguage();
   $langcode = $language_interface->getId();
-  $message = \Drupal::service('plugin.manager.mail')->mail('pet', $pet->getName(), $params['pet_to'], $langcode, $params, $params['pet_from']);
+  $message = \Drupal::service('plugin.manager.mail')
+    ->mail('pet', $pet->getName(), $params['pet_to'], $langcode, $params, $params['pet_from']);
   if ($message['send'] && $pet_logging == 0) {
     \Drupal::logger('pet')
-        ->notice('Successfully sent email to %recipient', array('%recipient' => $params['pet_to']));
+      ->notice('Successfully sent email to %recipient', array('%recipient' => $params['pet_to']));
   }
   // return message, useful for show custom message, based email send status
   return $message;

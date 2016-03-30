@@ -88,14 +88,12 @@ class Pet extends ContentEntityBase implements PetInterface {
     $fields['name'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Machine Name'))
       ->setDescription(t('The machine name of the PET.'))
-      ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'above',
         'type' => 'string',
       ))
       ->setDisplayOptions('form', array(
         'type' => 'string_machine_name',
-        'weight' => 1,
         'weight' => -13,
         'machine_name' => array(
           'source' => array('title'),

@@ -15,6 +15,7 @@ class PetForm extends ContentEntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
+    $form['name']['#type'] = 'hidden';
     $form['mimemail'] = array(
       '#type' => 'details',
       '#title' => t('Mime Mail options'),
@@ -37,7 +38,7 @@ class PetForm extends ContentEntityForm {
       '#title' => t('Additional options'),
       '#open' => FALSE,
       '#access' => \Drupal::currentUser()
-        ->hasPermission('administer previewable email templates'),
+          ->hasPermission('administer previewable email templates'),
     );
     $form['cc_default']['#group'] = 'advanced';
     $form['bcc_default']['#group'] = 'advanced';
@@ -54,9 +55,20 @@ class PetForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
+    /** @var \Drupal\pet\Entity\Pet $pet */
     $pet = $this->entity;
     $form_state->setRedirect('pet.list');
 
+    $machine_name = preg_replace('/[^A-Za-z0-9\-]/', '_', strtolower($pet->getTitle()));
+
+    // To avoid having 2 pets with same machine name.
+    $pet1 = pet_load_by_name($machine_name);
+    if ($pet->id() != $pet1->id()) {
+      $pet->setName($machine_name . '_1');
+    }
+    else {
+      $pet->setName($machine_name);
+    }
     $status = $pet->save();
     $t_args = array('%name' => $pet->label());
 
