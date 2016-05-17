@@ -28,10 +28,6 @@ interface PetInterface extends ContentEntityInterface {
    */
   public function setTitle($title);
 
-  public function getName();
-
-  public function setName($name);
-
   public function getStatus();
 
   public function setStatus($status);

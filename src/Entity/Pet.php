@@ -85,23 +85,6 @@ class Pet extends ContentEntityBase implements PetInterface {
       ->setLabel(t('Module'))
       ->setDescription(t('The name of the providing module if the entity has been defined in code.'));
 
-    $fields['name'] = BaseFieldDefinition::create('string')
-      ->setLabel(t('Machine Name'))
-      ->setDescription(t('The machine name of the PET.'))
-      ->setDisplayOptions('view', array(
-        'label' => 'above',
-        'type' => 'string',
-      ))
-      ->setDisplayOptions('form', array(
-        'type' => 'string_machine_name',
-        'weight' => -13,
-        'machine_name' => array(
-          'source' => array('title'),
-        ),
-      ))
-      ->setDisplayConfigurable('form', TRUE)
-      ->setDisplayConfigurable('view', TRUE);
-
     $fields['title'] = BaseFieldDefinition::create('string')
       ->setLabel(t('Title'))
       ->setDescription(t('A short, descriptive title for this email template. It will be used in administrative interfaces, and in page titles and menu items.'))
@@ -296,21 +279,6 @@ class Pet extends ContentEntityBase implements PetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getName() {
-    return $this->get('name')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setName($name) {
-    $this->set('name', $name);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getStatus() {
     return $this->get('status')->value;
   }
@@ -442,4 +410,5 @@ class Pet extends ContentEntityBase implements PetInterface {
     $this->set('from_override', $from_override);
     return $this;
   }
+
 }

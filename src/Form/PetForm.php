@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * PetForm class
- */
 
 namespace Drupal\pet\Form;
 
@@ -10,12 +6,17 @@ use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\pet\Entity;
 
+/**
+ * PetForm class.
+ */
 class PetForm extends ContentEntityForm {
 
+  /**
+   * {@inheritdoc}
+   */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form = parent::buildForm($form, $form_state);
 
-    $form['name']['#type'] = 'hidden';
     $form['mimemail'] = array(
       '#type' => 'details',
       '#title' => t('Mime Mail options'),
@@ -37,8 +38,7 @@ class PetForm extends ContentEntityForm {
       '#type' => 'details',
       '#title' => t('Additional options'),
       '#open' => FALSE,
-      '#access' => \Drupal::currentUser()
-          ->hasPermission('administer previewable email templates'),
+      '#access' => \Drupal::currentUser()->hasPermission('administer previewable email templates'),
     );
     $form['cc_default']['#group'] = 'advanced';
     $form['bcc_default']['#group'] = 'advanced';
@@ -58,25 +58,15 @@ class PetForm extends ContentEntityForm {
     /** @var \Drupal\pet\Entity\Pet $pet */
     $pet = $this->entity;
     $form_state->setRedirect('pet.list');
-
-    $machine_name = preg_replace('/[^A-Za-z0-9\-]/', '_', strtolower($pet->getTitle()));
-
-    // To avoid having 2 pets with same machine name.
-    $pet1 = pet_load_by_name($machine_name);
-    if ($pet->id() != $pet1->id()) {
-      $pet->setName($machine_name . '_1');
-    }
-    else {
-      $pet->setName($machine_name);
-    }
     $status = $pet->save();
-    $t_args = array('%name' => $pet->label());
+    $pet_title = array('%name' => $pet->label());
 
     if ($status == SAVED_UPDATED) {
-      drupal_set_message(t('The email template %name has been updated.', $t_args));
+      drupal_set_message(t('The email template %name has been updated.', $pet_title));
     }
     elseif ($status == SAVED_NEW) {
-      drupal_set_message(t('The email template %name has been added.', $t_args));
+      drupal_set_message(t('The email template %name has been added.', $pet_title));
     }
   }
+
 }

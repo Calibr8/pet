@@ -4,6 +4,7 @@
  * @file
  * Previewable Email Template module.
  */
+
 use Drupal\node\Entity\Node;
 use Drupal\pet\Entity\Pet;
 use Drupal\user\Entity\User;
@@ -16,29 +17,7 @@ function pet_load($pid) {
 }
 
 /**
- * Loads pet based on machine name.
- *
- * @param $name string
- *   Machine name of pet.
- *
- * @return bool|\Drupal\pet\Entity\Pet
- *   Returns pet entity if found else false.
- */
-function pet_load_by_name($name) {
-  $query = \Drupal::entityQuery('pet')
-    ->condition('name', $name)
-    ->execute();
-  if ($query) {
-    $ids = key($query);
-    return Pet::load($ids);
-  }
-  return FALSE;
-}
-
-/**
  * Loads multiple PETs by ID or based on a set of conditions.
- *
- * @see entity_load_multiple()
  *
  * @param array $pids
  *   An array of PET IDs.
@@ -47,8 +26,10 @@ function pet_load_by_name($name) {
  *
  * @return \Drupal\Core\Entity\EntityInterface|null
  *   An array of PET objects indexed by pid.
+ *
+ * @see entity_load_multiple()
  */
-function pet_load_multiple($pids = array(),  $reset = FALSE) {
+function pet_load_multiple($pids = array(), $reset = FALSE) {
   return Pet::loadMultiple('pet', $pids, $reset);
 }
 
@@ -57,7 +38,7 @@ function pet_load_multiple($pids = array(),  $reset = FALSE) {
  */
 function pet_uri(Pet $pet) {
   return array(
-    'path' => 'pet/' . $pet->getName(),
+    'path' => 'pet/' . $pet->id(),
   );
 }
 
@@ -96,14 +77,14 @@ function pet_lookup_uid($mail) {
  * are the same in each email sent.  The user tokens, if any are custom based
  * on the account (if any) associated with each email.
  *
- * @param $name
- *   The unique name of the PET template.
- * @param $recipients
+ * @param int $pet_id
+ *   The unique id of the PET template.
+ * @param array $recipients
  *   An array of at least one recipient in one of two formats:
  *      1. a simple email address, in which case the uid is looked up
  *      2. an array('mail' => <email address>, 'uid' => <uid>) in which case
- *         the uid is already available (more efficient)
- * @param $options
+ *         the uid is already available (more efficient).
+ * @param array $options
  *   An array of options as follows:
  *      nid - An optional node id for token substitutions.
  *      subject - An optional subject which if provided will override the
@@ -120,11 +101,11 @@ function pet_lookup_uid($mail) {
  *      bcc - Optional bcc emails which if provided which will override the
  *        bcc's in the PET.
  */
-function pet_send_mail($name, $recipients, $options) {
-  $pet = pet_load($name);
+function pet_send_mail($pet_id, $recipients, $options) {
+  $pet = pet_load($pet_id);
   if (!$pet) {
     \Drupal::logger('pet')
-      ->error('Unable to load PET %name.', array('%name' => $pet->getName()));
+      ->error('Unable to load PET %pet_id.', array('%pet_id' => $pet_id()));
     return;
   }
   if (is_array($recipients) == FALSE) {
@@ -133,12 +114,12 @@ function pet_send_mail($name, $recipients, $options) {
   else {
     if (is_array($recipients) == TRUE && count($recipients) < 1) {
       \Drupal::logger('pet')
-        ->notice('At least one recipient must be provided for PET %name.', array('%name' => $pet->getName()));
+        ->notice('At least one recipient must be provided for PET %pet_label.', array('%pet_label' => $pet->label()));
       return;
     }
   }
 
-  // Override subject and body if necessary
+  // Override subject and body if necessary.
   if (isset($options['subject'])) {
     $pet->setSubject($options['subject']);
   }
@@ -149,7 +130,7 @@ function pet_send_mail($name, $recipients, $options) {
     $pet->setMailbodyPlain($options['body_plain']);
   }
 
-  // Resolve from address
+  // Resolve from address.
   if (pet_isset_or($options['from'])) {
     $from = $options['from'];
   }
@@ -160,7 +141,7 @@ function pet_send_mail($name, $recipients, $options) {
     $from = \Drupal::config('system.site')->get('mail');
   }
 
-  // Store data in params in case a module wants to act on them somehow
+  // Store data in params in case a module wants to act on them somehow.
   $params = array(
     'pet_from' => $from,
     'pet_recipients' => $recipients,
@@ -170,7 +151,7 @@ function pet_send_mail($name, $recipients, $options) {
     'pet_reply_to' => pet_isset_or($options['reply_to']),
     'pet_options' => $options,
   );
-  // array to hold status of messages send
+  // Array to hold status of messages send.
   $message_status = array();
   foreach ($recipients as $recipient) {
     if (is_array($recipient)) {
@@ -178,14 +159,14 @@ function pet_send_mail($name, $recipients, $options) {
       $params['pet_uid'] = $recipient['uid'];
     }
     else {
-      // Strip leading uid for backward compatibility
+      // Strip leading uid for backward compatibility.
       $mail = preg_replace('/^[0-9]*\|/', '', $recipient);
       $params['pet_to'] = $mail;
       $params['pet_uid'] = pet_lookup_uid($mail);
     }
     $message_status[$params['pet_to']] = pet_send_one_mail($pet, $params);
   }
-  // return message status
+  // Return message status.
   return $message_status;
 }
 
@@ -194,10 +175,9 @@ function pet_send_mail($name, $recipients, $options) {
  *
  * This may be called directly from other modules.
  *
- * @param $pet
- *   The loaded PET object to use for the email
- * @see pet_load()
- * @param $params
+ * @param object $pet
+ *   The loaded PET object to use for the email.
+ * @param array $params
  *   Array of parameters used when constructing the email.
  *      pet_from (required) - a valid sender email address
  *      pet_to (required) - a valid recipient email address
@@ -227,14 +207,14 @@ function pet_send_one_mail(Pet $pet, $params) {
     return;
   }
 
-  $pet_name = $pet->getName();
+  $pet_title = $pet->label();
   if (empty($params['pet_from'])) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-        ->error('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name));
+        ->error('Missing sender email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title));
     }
     else {
-      drupal_set_message(t('Missing sender email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name)), 'error');
+      drupal_set_message(t('Missing sender email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title)), 'error');
     }
     return;
   }
@@ -242,10 +222,10 @@ function pet_send_one_mail(Pet $pet, $params) {
   if (empty($params['pet_to'])) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-        ->error('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name));
+        ->error('Missing recipient email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title));
     }
     else {
-      drupal_set_message(t('Missing recipient email address in pet_send_one_mail() for PET \'%name\'.', array('%name' => $pet_name)), 'error');
+      drupal_set_message(t('Missing recipient email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title)), 'error');
     }
     return;
   }
@@ -259,24 +239,24 @@ function pet_send_one_mail(Pet $pet, $params) {
   $params['subject'] = $token->replace($pet->getSubject(), $substitutions, array('clear' => TRUE));
   $params['body'] = $token->replace($pet->getMailbody(), $substitutions, array('clear' => TRUE));
 
-  // Provided for Mime Mail module; alternate text-only form for multipart MIME
+  // Provided for Mime Mail module; alternate text-only form for multipart MIME.
   $mail_body_plain = trim($pet->getMailbodyPlain());
   if (!empty($mail_body_plain)) {
     $params['plaintext'] = $token->replace($pet->getMailbodyPlain(), $substitutions, array('clear' => TRUE));
   }
 
-  // Provided for Mime Mail module; send ONLY plain text
+  // Provided for Mime Mail module; send ONLY plain text.
   $params['plain'] = $pet->getSendPlain();
 
   $language_interface = \Drupal::languageManager()->getCurrentLanguage();
   $langcode = $language_interface->getId();
   $message = \Drupal::service('plugin.manager.mail')
-    ->mail('pet', $pet->getName(), $params['pet_to'], $langcode, $params, $params['pet_from']);
+    ->mail('pet', $pet->id(), $params['pet_to'], $langcode, $params, $params['pet_from']);
   if ($message['send'] && $pet_logging == 0) {
     \Drupal::logger('pet')
       ->notice('Successfully sent email to %recipient', array('%recipient' => $params['pet_to']));
   }
-  // return message, useful for show custom message, based email send status
+  // Return message, useful for show custom message, based email send status.
   return $message;
 }
 
@@ -287,7 +267,7 @@ function pet_substitutions($pet, $params) {
   $uid = pet_isset_or($params['pet_uid']);
   $nid = pet_isset_or($params['pet_nid']);
 
-  // Standard substitutions
+  // Standard substitutions.
   $substitutions['global'] = NULL;
   if (!empty($uid)) {
     $user = User::load($uid);
@@ -298,17 +278,17 @@ function pet_substitutions($pet, $params) {
     $substitutions['node'] = $node;
   }
 
-  // Give modules the opportunity to add their own token types/objects
+  // Give modules the opportunity to add their own token types/objects.
   // @todo Replace with hook_alter implementation.
-  // drupal_alter('pet_substitutions', $substitutions, $params);
+  // drupal_alter('pet_substitutions', $substitutions, $params);.
   return $substitutions;
 }
 
 /**
- * Implementation of hook_mail()
+ * Implements hook_mail().
  *
- * To customize, e.g. to change the content type to text/html etc, you can use hook_mail_alter()
- * in one of your modules.
+ * To customize, e.g. to change the content type to text/html etc,
+ * you can use hook_mail_alter() in one of your modules.
  */
 function pet_mail($key, &$message, $params) {
   $message['subject'] = $params['subject'];
@@ -328,7 +308,7 @@ function pet_mail($key, &$message, $params) {
  * Don't want this to be too expensive, but don't want to send bogus emails either.
  */
 function pet_is_valid($pet) {
-  return is_object($pet) && !empty($pet->getName()) && is_numeric($pet->id());
+  return is_object($pet) && is_numeric($pet->id());
 }
 
 /**
@@ -371,8 +351,9 @@ function pet_token_help() {
 }
 
 /**
- * Return TRUE if a $val is a natural number (integer 1, 2, 3, ...).  Base can
- * be changed to zero if desired.
+ * Return TRUE if a $val is a natural number (integer 1, 2, 3, ...).
+ *
+ * Base can be changed to zero if desired.
  */
 function pet_is_natural($val, $base = 1) {
   if (!isset($val)) {

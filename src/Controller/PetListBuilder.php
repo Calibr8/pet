@@ -1,9 +1,4 @@
 <?php
-/**
- * @file
- * PetListController Class
- */
-
 namespace Drupal\pet\Controller;
 
 use Drupal\Core\Entity\EntityInterface;
@@ -11,6 +6,9 @@ use Drupal\Core\Entity\EntityListBuilder;
 use Drupal\Core\Url;
 use Drupal\pet\Entity;
 
+/**
+ * Class for pet listing page.
+ */
 class PetListBuilder extends EntityListBuilder {
 
   /**
@@ -18,12 +16,15 @@ class PetListBuilder extends EntityListBuilder {
    */
   public function buildHeader() {
     $header['id'] = $this->t('PET ID');
-    $header['label'] = $this->t('Label');
+    $header['title'] = $this->t('Title');
     $header['subject'] = $this->t('Subject');
     $header['status'] = $this->t('Status');
     return $header + parent::buildHeader();
   }
 
+  /**
+   * {@inheritdoc}
+   */
   public function render() {
     $build['description'] = array(
       '#markup' => $this->t('You can manage the settings on the <a href="@adminlink">admin page</a>.', array(
@@ -51,7 +52,6 @@ class PetListBuilder extends EntityListBuilder {
     $row['label']['data'] = array(
       '#type' => 'link',
       '#title' => $entity->getTitle(),
-      '#suffix' => '<small> ' . t(' (Machine name: ') . $entity->getName() . ')</small>',
       '#url' => $url,
     );
     $row['subject'] = $entity->getSubject();
@@ -59,4 +59,4 @@ class PetListBuilder extends EntityListBuilder {
     return $row + parent::buildRow($entity);
   }
 
-} 
+}
