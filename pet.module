@@ -105,7 +105,7 @@ function pet_send_mail($pet_id, $recipients, $options) {
   $pet = pet_load($pet_id);
   if (!$pet) {
     \Drupal::logger('pet')
-      ->error('Unable to load PET %pet_id.', array('%pet_id' => $pet_id()));
+      ->error('Unable to load PET %pet_id.', array('%pet_id' => $pet_id));
     return;
   }
   if (is_array($recipients) == FALSE) {
@@ -279,8 +279,7 @@ function pet_substitutions($pet, $params) {
   }
 
   // Give modules the opportunity to add their own token types/objects.
-  // @todo Replace with hook_alter implementation.
-  // drupal_alter('pet_substitutions', $substitutions, $params);.
+  \Drupal::moduleHandler()->alter('pet_substitutions', $substitutions, $params);
   return $substitutions;
 }
 
