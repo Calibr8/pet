@@ -5,6 +5,8 @@
  * Contains pages for creating, editing, and deleting previewable email templates (PETs).
  */
 
+use Drupal\user\Entity\User.
+
 /**
  * Generate the PET editing form.
  */
@@ -168,8 +170,8 @@ function pet_user_form($form, &$form_state, $pet) {
       else {
         $default_mail = '';
         if ($uid) {
-          if ($account = user_load($uid)) {
-            $default_mail = $account->mail;
+          if ($account = User::load($uid)) {
+            $default_mail = $account->getEmail();
           }
           else {
             drupal_set_message(t('Cannot load a user with uid @uid.', array('@uid' => $uid)), 'error');

@@ -63,7 +63,7 @@ function pet_action_send_pet($pet_name, $to_text, $to_account, $account_subs, $n
   
   // Resolve the recipient
   if (isset($to_account)) {
-    $pet_to = $to_account->mail;
+    $pet_to = $to_account->getEmail();
   }
   elseif (isset($to_text)) {
     $pet_to = $to_text;

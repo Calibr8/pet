@@ -56,7 +56,7 @@ class PetPreviewForm extends FormBase {
           $default_mail = '';
           if ($uid) {
             if ($account = User::load($uid)) {
-              $default_mail = $account->mail;
+              $default_mail = $account->getEmail();
             }
             else {
               drupal_set_message(t('Cannot load a user with uid @uid.', array('@uid' => $uid)), 'error');
