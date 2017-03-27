@@ -1,8 +1,4 @@
 <?php
-/**
- * @file Contains
- * Drupal\Pet\PetInterface
- */
 
 namespace Drupal\pet;
 

@@ -1,8 +1,5 @@
 <?php
-/**
- * @file
- * Contains \Drupal\pet\Form\PetDeleteForm
- */
+
 namespace Drupal\pet\Form;
 
 use Drupal\Core\Entity\ContentEntityDeleteForm;

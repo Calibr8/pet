@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * PET preview form.
- */
 
 namespace Drupal\pet\Form;
 

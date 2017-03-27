@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * PET Class - Entity for PET.
- */
 
 namespace Drupal\pet\Entity;
 

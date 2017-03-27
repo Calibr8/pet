@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains \Drupal\pet\PetAccessControlHandler class.
- */
 
 namespace Drupal\pet;
 

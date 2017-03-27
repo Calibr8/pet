@@ -1,8 +1,4 @@
 <?php
-/**
- * @file
- * Contains Drupal\pet\Form\PetSettingsForm.
- */
 
 namespace Drupal\pet\Form;
 
