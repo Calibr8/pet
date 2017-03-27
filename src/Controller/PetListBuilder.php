@@ -33,7 +33,7 @@ class PetListBuilder extends EntityListBuilder {
       )),
     );
     $build['add_pet'] = array(
-      '#markup' => t('<p><a href="@addpet">Add previewable email template<a/></p>', array(
+      '#markup' => t('<p><a href="@addpet">Add previewable email template</a></p>', array(
         '@addpet' => \Drupal::url('pet.add'),
       )),
 
