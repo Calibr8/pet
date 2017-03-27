@@ -12,7 +12,7 @@ pet.list:
     _entity_list: 'pet'
     _title: 'Previewable Email Templates'
   requirements:
-    _permission: 'view PETs entity'
+    _permission: 'view PET entity'
 
 pet.add:
   path: '/admin/structure/pets/add'
@@ -52,4 +52,4 @@ pet.preview:
     _form: '\Drupal\pet\Form\PetPreviewForm'
     _title: 'Previewable Email Template Preview'
   requirements:
-    _permission: 'view PETs entity'
+    _permission: 'view PET entity'
