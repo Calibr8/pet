@@ -24,7 +24,7 @@ function pet_load($pid) {
  * @param bool $reset
  *   Whether to reset the internal PET loading cache.
  *
- * @return \Drupal\Core\Entity\EntityInterface|null
+ * @return array
  *   An array of PET objects indexed by pid.
  *
  * @see entity_load_multiple()
@@ -369,13 +369,26 @@ function pet_is_natural($val, $base = 1) {
  * Return formatted list of PET recipients for preview display.
  */
 function pet_recipients_formatted($recipients) {
-  $output = '';
+  $build = [];
   if (is_array($recipients)) {
     foreach ($recipients as $recipient) {
+      $output = '';
       $output .= $recipient['mail'] . ' ';
       $output .= $recipient['uid'] ? t('(user @uid)', array('@uid' => $recipient['uid'])) : t('(no user id)');
       $output .= "\n";
+      $build['#markup'] = $output;
     }
-    return $output;
+    return $build;
   }
+}
+
+/**
+ * Implements hook_hook_info().
+ */
+function pet_hook_info() {
+  $hooks = ['pet_substitutions_alter'];
+  $info = [
+    'group' => 'pet',
+  ];
+  return array_fill_keys($hooks, $info);
 }

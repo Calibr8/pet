@@ -196,7 +196,7 @@ class PetPreviewForm extends FormBase {
         $form['back'] = array(
           '#type' => 'submit',
           '#value' => t('Back'),
-          '#submit' => array('pet_user_form_back'),
+          '#submit' => ['::stepBack'],
         );
         $form['submit'] = array(
           '#type' => 'submit',
@@ -272,4 +272,12 @@ class PetPreviewForm extends FormBase {
     $storage['body_preview_plain'] = $token->replace(pet_isset_or($values['mail_body_plain']), $subs);
     $form_state->setStorage($storage);
   }
+
+/**
+ * {@inheritdoc}
+ */
+ public function stepBack(array &$form, FormStateInterface $form_state) {
+   $form_state->setRebuild(TRUE);
+   $form_state->set('step', 1);
+ }
 }
