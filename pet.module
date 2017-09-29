@@ -29,7 +29,7 @@ function pet_load($pid) {
  *
  * @see entity_load_multiple()
  */
-function pet_load_multiple($pids = array(), $reset = FALSE) {
+function pet_load_multiple($pids = [], $reset = FALSE) {
   return Pet::loadMultiple('pet', $pids, $reset);
 }
 
@@ -37,9 +37,9 @@ function pet_load_multiple($pids = array(), $reset = FALSE) {
  * Entity uri callback.
  */
 function pet_uri(Pet $pet) {
-  return array(
+  return [
     'path' => 'pet/' . $pet->id(),
-  );
+  ];
 }
 
 /**
@@ -64,9 +64,7 @@ function pet_lookup_uid($mail) {
   if ($user) {
     return $user->id();
   }
-  else {
-    return;
-  }
+  return FALSE;
 }
 
 /**
@@ -105,16 +103,16 @@ function pet_send_mail($pet_id, $recipients, $options) {
   $pet = pet_load($pet_id);
   if (!$pet) {
     \Drupal::logger('pet')
-      ->error('Unable to load PET %pet_id.', array('%pet_id' => $pet_id));
+      ->error('Unable to load PET %pet_id.', ['%pet_id' => $pet_id]);
     return;
   }
   if (is_array($recipients) == FALSE) {
-    $recipients = array($recipients);
+    $recipients = [$recipients];
   }
   else {
     if (is_array($recipients) == TRUE && count($recipients) < 1) {
       \Drupal::logger('pet')
-        ->notice('At least one recipient must be provided for PET %pet_label.', array('%pet_label' => $pet->label()));
+        ->notice('At least one recipient must be provided for PET %pet_label.', ['%pet_label' => $pet->label()]);
       return;
     }
   }
@@ -142,7 +140,7 @@ function pet_send_mail($pet_id, $recipients, $options) {
   }
 
   // Store data in params in case a module wants to act on them somehow.
-  $params = array(
+  $params = [
     'pet_from' => $from,
     'pet_recipients' => $recipients,
     'pet_nid' => pet_isset_or($options['nid']),
@@ -150,9 +148,9 @@ function pet_send_mail($pet_id, $recipients, $options) {
     'pet_bcc' => pet_parse_mails(pet_isset_or($options['bcc'])),
     'pet_reply_to' => pet_isset_or($options['reply_to']),
     'pet_options' => $options,
-  );
+  ];
   // Array to hold status of messages send.
-  $message_status = array();
+  $message_status = [];
   foreach ($recipients as $recipient) {
     if (is_array($recipient)) {
       $params['pet_to'] = $recipient['mail'];
@@ -211,10 +209,10 @@ function pet_send_one_mail(Pet $pet, $params) {
   if (empty($params['pet_from'])) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-        ->error('Missing sender email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title));
+        ->error('Missing sender email address in pet_send_one_mail() for PET \'%pet_title\'.', ['%pet_title' => $pet_title]);
     }
     else {
-      drupal_set_message(t('Missing sender email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title)), 'error');
+      drupal_set_message(t('Missing sender email address in pet_send_one_mail() for PET \'%pet_title\'.', ['%pet_title' => $pet_title]), 'error');
     }
     return;
   }
@@ -222,10 +220,10 @@ function pet_send_one_mail(Pet $pet, $params) {
   if (empty($params['pet_to'])) {
     if ($pet_logging < 2) {
       \Drupal::logger('pet')
-        ->error('Missing recipient email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title));
+        ->error('Missing recipient email address in pet_send_one_mail() for PET \'%pet_title\'.', ['%pet_title' => $pet_title]);
     }
     else {
-      drupal_set_message(t('Missing recipient email address in pet_send_one_mail() for PET \'%pet_title\'.', array('%pet_title' => $pet_title)), 'error');
+      drupal_set_message(t('Missing recipient email address in pet_send_one_mail() for PET \'%pet_title\'.', ['%pet_title' => $pet_title]), 'error');
     }
     return;
   }
@@ -236,13 +234,13 @@ function pet_send_one_mail(Pet $pet, $params) {
   $params['pet'] = $pet;
   $substitutions = pet_substitutions($pet, $params);
   $token = \Drupal::token();
-  $params['subject'] = $token->replace($pet->getSubject(), $substitutions, array('clear' => TRUE));
-  $params['body'] = $token->replace($pet->getMailbody(), $substitutions, array('clear' => TRUE));
+  $params['subject'] = $token->replace($pet->getSubject(), $substitutions, ['clear' => TRUE]);
+  $params['body'] = $token->replace($pet->getMailbody(), $substitutions, ['clear' => TRUE]);
 
   // Provided for Mime Mail module; alternate text-only form for multipart MIME.
   $mail_body_plain = trim($pet->getMailbodyPlain());
   if (!empty($mail_body_plain)) {
-    $params['plaintext'] = $token->replace($pet->getMailbodyPlain(), $substitutions, array('clear' => TRUE));
+    $params['plaintext'] = $token->replace($pet->getMailbodyPlain(), $substitutions, ['clear' => TRUE]);
   }
 
   // Provided for Mime Mail module; send ONLY plain text.
@@ -254,14 +252,15 @@ function pet_send_one_mail(Pet $pet, $params) {
     ->mail('pet', $pet->id(), $params['pet_to'], $langcode, $params, $params['pet_from']);
   if ($message['send'] && $pet_logging == 0) {
     \Drupal::logger('pet')
-      ->notice('Successfully sent email to %recipient', array('%recipient' => $params['pet_to']));
+      ->notice('Successfully sent email to %recipient', ['%recipient' => $params['pet_to']]);
   }
   // Return message, useful for show custom message, based email send status.
   return $message;
 }
 
 /**
- * Load the token objects for a PET template in preparation for token substitution.
+ * Load the token objects for a PET template in preparation for token
+ * substitution.
  */
 function pet_substitutions($pet, $params) {
   $uid = pet_isset_or($params['pet_uid']);
@@ -304,7 +303,8 @@ function pet_mail($key, &$message, $params) {
 /**
  * Check the validity of a loaded PET.
  *
- * Don't want this to be too expensive, but don't want to send bogus emails either.
+ * Don't want this to be too expensive, but don't want to send bogus emails
+ * either.
  */
 function pet_is_valid($pet) {
   return is_object($pet) && is_numeric($pet->id());
@@ -325,26 +325,27 @@ function pet_isset_or(&$val, $alternate = NULL) {
 }
 
 /**
- * Helper function to provide token help to template construction form and template use form.
+ * Helper function to provide token help to template construction form and
+ * template use form.
  */
 function pet_token_help() {
   if (\Drupal::moduleHandler()->moduleExists('token')) {
-    $tokens = array(
+    $tokens = [
       '#title' => t('Replacement patterns'),
       '#type' => 'details',
       '#collapsible' => TRUE,
       '#collapsed' => TRUE,
       '#description' => t('Make sure that the tokens you choose are available to your template when previewed. The list below includes the standard Nodes and Users groups, as well as global tokens. See also hook_pet_substitutions_alter().'),
-    );
-    $tokens['token_tree'] = array(
+    ];
+    $tokens['token_tree'] = [
       '#theme' => 'token_tree_link',
-      '#token_types' => array('node', 'user'),
-    );
+      '#token_types' => ['node', 'user'],
+    ];
   }
   else {
-    $tokens = array(
-      '#markup' => '<p>' . t('Enable the <a href="@drupal-token">Token module</a> to view the available token browser.', array('@drupal-token' => 'http://drupal.org/project/token')) . '</p>',
-    );
+    $tokens = [
+      '#markup' => '<p>' . t('Enable the <a href="@drupal-token">Token module</a> to view the available token browser.', ['@drupal-token' => 'http://drupal.org/project/token']) . '</p>',
+    ];
   }
   return $tokens;
 }
@@ -374,7 +375,7 @@ function pet_recipients_formatted($recipients) {
     foreach ($recipients as $recipient) {
       $output = '';
       $output .= $recipient['mail'] . ' ';
-      $output .= $recipient['uid'] ? t('(user @uid)', array('@uid' => $recipient['uid'])) : t('(no user id)');
+      $output .= $recipient['uid'] ? t('(user @uid)', ['@uid' => $recipient['uid']]) : t('(no user id)');
       $output .= "\n";
       $build['#markup'] = $output;
     }
