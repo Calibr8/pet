@@ -164,7 +164,6 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
           'placeholder' => '',
         ],
       ])
-      ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['title'] = BaseFieldDefinition::create('string')
