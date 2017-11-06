@@ -255,18 +255,21 @@ class PetPreviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $recipients_array = [];
 
-    // todo: Make this more generic, and also test CC and BCC input.
-    $errors = $this->validateRecipients($form_state, $recipients_array);
+    if ($form_state->getStorage()['step'] == 1) {
+      $recipients_array = [];
 
-    if (!empty($errors)) {
-      foreach ($errors as $error) {
-        $form_state->setErrorByName('recipients', $error);
+      // todo: Make this more generic, and also test CC and BCC input.
+      $errors = $this->validateRecipients($form_state, $recipients_array);
+
+      if (!empty($errors)) {
+        foreach ($errors as $error) {
+          $form_state->setErrorByName('recipients', $error);
+        }
       }
-    }
-    else {
-      $form_state->setValue('recipients_array', $recipients_array);
+      else {
+        $form_state->setValue('recipients_array', $recipients_array);
+      }
     }
   }
 
@@ -323,7 +326,10 @@ class PetPreviewForm extends FormBase {
    */
   public function stepBack(array &$form, FormStateInterface $form_state) {
     $form_state->setRebuild(TRUE);
-    $form_state->set('step', 1);
+
+    $storage = $form_state->getStorage();
+    $storage['step'] = 1;
+    $form_state->setStorage($storage);
   }
 
   /**
@@ -449,7 +455,7 @@ class PetPreviewForm extends FormBase {
     $values = $form_state->getValues();
     $storage = $form_state->getStorage();
 
-    $first = array_pop($storage['recipients_array']);
+    $first = reset($storage['recipients_array']);
     $uid = isset($first['uid']) ? $first['uid'] : 0;
     $substitutions = PetHelper::getSubstitutions(['uid' => $uid]);
 
