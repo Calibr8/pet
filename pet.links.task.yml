@@ -1,7 +1,7 @@
 pet.settings_tab:
   route_name: pet.settings
-  title: 'Settings'
   base_route: pet.settings
+  title: 'Settings'
 
 entity.pet.canonical:
   route_name: entity.pet.canonical
@@ -26,6 +26,4 @@ entity.pet.version_history:
 entity.pet.delete_form:
   route_name:  entity.pet.delete_form
   base_route:  entity.pet.canonical
-  title: Delete
-  weight: 10
-
+  title: 'Delete'
