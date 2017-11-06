@@ -21,6 +21,10 @@ class PetHtmlRouteProvider extends AdminHtmlRouteProvider {
     $collection = parent::getRoutes($entity_type);
     $entity_type_id = $entity_type->id();
 
+    // It seems that by default, you need "administer pet entities" to view
+    // the collection list.
+    $collection->get("entity.{$entity_type_id}.collection")->setRequirement('_permission', 'view pet entity');
+
     if ($history_route = $this->getHistoryRoute($entity_type)) {
       $collection->add("entity.{$entity_type_id}.version_history", $history_route);
     }
