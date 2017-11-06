@@ -1,0 +1,5 @@
+pet.general:
+  version: 1.x
+  css:
+    theme:
+      css/pet.css: {}

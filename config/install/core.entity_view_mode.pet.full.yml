@@ -1,0 +1,9 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - pet
+id: pet.full
+label: 'Full content'
+targetEntityType: pet
+cache: true

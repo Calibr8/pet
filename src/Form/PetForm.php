@@ -4,10 +4,12 @@ namespace Drupal\pet\Form;
 
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\pet\Entity;
+use Drupal\pet\Utility\PetHelper;
 
 /**
- * PetForm class.
+ * Form controller for Pet edit forms.
+ *
+ * @ingroup pet
  */
 class PetForm extends ContentEntityForm {
 
@@ -15,38 +17,40 @@ class PetForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    /* @var $entity \Drupal\pet\Entity\Pet */
     $form = parent::buildForm($form, $form_state);
 
-    $form['mimemail'] = array(
+    $form['mimemail'] = [
       '#type' => 'details',
-      '#title' => t('Mime Mail options'),
-      '#collapsible' => TRUE,
-      '#collapsed' => FALSE,
+      '#title' => $this->t('Mime Mail options'),
       '#open' => TRUE,
-    );
-    $form['send_plain']['#group'] = 'mimemail';
-    $form['mail_body_plain']['#group'] = 'mimemail';
+      '#description' => $this->t('HTML email support is most easily provided by the <a href="@url">Mime Mail</a> module, which must be installed and enabled.', ['@url' => 'http://drupal.org/project/mimemail']),
+    ];
 
-    $form['mimemail']['#description'] = t('HTML email support is most easily provided by the <a href="@url">Mime Mail</a> module, which must be installed and enabled.', array('@url' => 'http://drupal.org/project/mimemail'));
-    // @todo : #2366853 - Mime mail integration
-    if (!pet_has_mimemail()) {
-      unset($form['mail_body_plain']);
-      unset($form['send_plain']);
+    if (PetHelper::hasMimeMail()) {
+      $form['send_plain']['#group'] = 'mimemail';
+      $form['mail_body_plain']['#group'] = 'mimemail';
+    }
+    else {
+      unset($form['send_plain'], $form['mail_body_plain']);
     }
 
-    $form['advanced'] = array(
-      '#type' => 'details',
-      '#title' => t('Additional options'),
-      '#open' => FALSE,
-      '#access' => \Drupal::currentUser()->hasPermission('administer previewable email templates'),
-    );
-    $form['cc_default']['#group'] = 'advanced';
-    $form['bcc_default']['#group'] = 'advanced';
-    $form['from_override']['#group'] = 'advanced';
-    $form['recipient_callback']['#group'] = 'advanced';
-    $form['actions']['submit']['#value'] = t('Save Template');
-
     $form['tokens'] = pet_token_help();
+
+    $has_administer = \Drupal::currentUser()->hasPermission('administer pet entities');
+    $form['admin'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Additional options'),
+      '#open' => $has_administer,
+      '#access' => $has_administer,
+    ];
+
+    $form['cc']['#group'] = 'admin';
+    $form['bcc']['#group'] = 'admin';
+    $form['reply_to']['#group'] = 'admin';
+    $form['recipient_callback']['#group'] = 'admin';
+
+    $form['actions']['submit']['#value'] = $this->t('Save Template');
 
     return $form;
   }
@@ -55,18 +59,35 @@ class PetForm extends ContentEntityForm {
    * {@inheritdoc}
    */
   public function save(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\pet\Entity\Pet $pet */
-    $pet = $this->entity;
-    $form_state->setRedirect('pet.list');
-    $status = $pet->save();
-    $pet_title = array('%name' => $pet->label());
+    $entity = &$this->entity;
 
-    if ($status == SAVED_UPDATED) {
-      drupal_set_message(t('The email template %name has been updated.', $pet_title));
+    // Save as a new revision if requested to do so.
+    if (!$form_state->isValueEmpty('new_revision') && $form_state->getValue('new_revision') != FALSE) {
+      $entity->setNewRevision();
+
+      // If a new revision is created, save the current user as revision author.
+      $entity->setRevisionCreationTime(\Drupal::time()->getRequestTime());
+      $entity->setRevisionAuthorId(\Drupal::currentUser()->id());
     }
-    elseif ($status == SAVED_NEW) {
-      drupal_set_message(t('The email template %name has been added.', $pet_title));
+    else {
+      $entity->setNewRevision(FALSE);
     }
+
+    $status = parent::save($form, $form_state);
+
+    switch ($status) {
+      case SAVED_NEW:
+        drupal_set_message($this->t('The email template %label has been added.', [
+          '%label' => $entity->label(),
+        ]));
+        break;
+
+      default:
+        drupal_set_message($this->t('The email template %label has been updated.', [
+          '%label' => $entity->label(),
+        ]));
+    }
+    $form_state->setRedirect('entity.pet.collection');
   }
 
 }

@@ -1,0 +1,31 @@
+pet.settings_tab:
+  route_name: pet.settings
+  title: 'Settings'
+  base_route: pet.settings
+
+entity.pet.canonical:
+  route_name: entity.pet.canonical
+  base_route: entity.pet.canonical
+  title: 'View'
+
+entity.pet.preview:
+  route_name: entity.pet.preview
+  base_route: entity.pet.canonical
+  title: 'Preview'
+
+entity.pet.edit_form:
+  route_name: entity.pet.edit_form
+  base_route: entity.pet.canonical
+  title: 'Edit'
+
+entity.pet.version_history:
+  route_name: entity.pet.version_history
+  base_route: entity.pet.canonical
+  title: 'Revisions'
+
+entity.pet.delete_form:
+  route_name:  entity.pet.delete_form
+  base_route:  entity.pet.canonical
+  title: Delete
+  weight: 10
+

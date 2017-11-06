@@ -1,17 +1,26 @@
-add PET entity:
-  title: 'Add PET entity'
-view PET entity:
-  title: 'View PET entities'
-edit PET entity:
-  title: 'Edit PET entity'
-delete PET entity:
-  title: 'Delete PET entity'
+add pet entity:
+  title: 'Add Pet entity'
+
+delete pet entity:
+  title: 'Delete Pet entity'
+
+edit pet entity:
+  title: 'Edit Pet entity'
+
+view pet entity:
+  title: 'View Pet entities'
+
+access pet revisions:
+  title: 'View Pet entity revisions'
+
+revert pet revisions:
+  title: 'Revert Pet revisions'
+  description: 'Role requires permission <em>View Pet revisions</em> and <em>Edit Pet entity</em> for Pet entities in question or <em>administer pet entities</em>.'
+
+delete pet revisions:
+  title: 'Delete Pet revisions'
+  description: 'Role requires permission to <em>View Pet revisions</em> and <em>Delete Pet entity</em> for Pet entities in question or <em>administer pet entities</em>.'
+
+administer pet entities:
+  title: 'Administer Pet entities'
   restrict access: TRUE
-administer PET entity:
-  title: 'Administer PET settings'
-  restrict access: TRUE
-administer previewable email templates:
-  title: 'Administer previewable email templates'
-  restrict access: TRUE
-use previewable email templates:
-  title: 'Use previewable email templates'

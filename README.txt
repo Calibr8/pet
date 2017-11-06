@@ -44,7 +44,7 @@ Template Management
 ===================
 Manage (import, add, edit, clone, delete, export) the templates for your 
 site from the Structure page (/admin/structure/pets). Users must have 
-"administer previewable email templates" permission for this.
+"administer pet entities" permission for this.
  
 * Title (required) - A descriptive title for the template. For reference by PET
   administrators. Doesn't appear anywhere in the email itself.

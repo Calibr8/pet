@@ -7,10 +7,17 @@ use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Class PetSettingsForm.
- * @package Drupal\pet\Form
+ *
  * @ingroup pet
  */
 class PetSettingsForm extends FormBase {
+
+  /**
+   * Logging levels.
+   */
+  const PET_LOGGER_NONE = 0;
+  const PET_LOGGER_ERRORS = 1;
+  const PET_LOGGER_ALL = 2;
 
   /**
    * {@inheritdoc}
@@ -23,7 +30,8 @@ class PetSettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    \Drupal::configFactory()->getEditable('pet.settings')
+    \Drupal::configFactory()
+      ->getEditable('pet.settings')
       ->set('pet_logging', $form_state->getValue('pet_logging'))
       ->save();
   }
@@ -34,29 +42,30 @@ class PetSettingsForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $pet_logging = \Drupal::config('pet.settings')->get('pet_logging');
 
-    $form['logging'] = array(
+    $form['logging'] = [
       '#type' => 'details',
-      '#title' => t('PET log settings'),
+      '#title' => $this->t('Pet log settings'),
       '#open' => TRUE,
-    );
+    ];
 
-    $options = array(
-      0 => t('Log everything.'),
-      1 => t('Log errors only.'),
-      2 => t('No logging, display error on screen, useful for debugging.'),
-    );
+    $options = [
+      static::PET_LOGGER_ALL => $this->t('Log everything.'),
+      static::PET_LOGGER_ERRORS => $this->t('Log errors only.'),
+      static::PET_LOGGER_NONE => $this->t('No logging, display error on screen.'),
+    ];
 
-    $form['logging']['pet_logging'] = array(
+    $form['logging']['pet_logging'] = [
       '#type' => 'radios',
-      '#title' => t('Log setting'),
+      '#title' => $this->t('Log setting'),
       '#options' => $options,
       '#default_value' => $pet_logging,
-    );
+    ];
 
-    $form['submit'] = array(
+    $form['submit'] = [
       '#type' => 'submit',
-      '#value' => t('Submit'),
-    );
+      '#value' => $this->t('Submit'),
+    ];
     return $form;
   }
+
 }

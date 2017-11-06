@@ -1,0 +1,5 @@
+entity.pet.add_form:
+  route_name: entity.pet.add_form
+  title: 'Add template'
+  appears_on:
+    - entity.pet.collection

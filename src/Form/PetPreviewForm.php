@@ -2,11 +2,20 @@
 
 namespace Drupal\pet\Form;
 
+use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\pet\PetInterface;
-use Drupal\user\Entity\User;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\pet\Entity\PetInterface;
+use Drupal\pet\Utility\PetHelper;
 
+/**
+ * PetPreviewForm.
+ *
+ * @package Drupal\pet\Form
+ *
+ * @todo: review, check and test.
+ */
 class PetPreviewForm extends FormBase {
 
   /**
@@ -20,193 +29,220 @@ class PetPreviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, PetInterface $pet = NULL) {
-    $body_description = t('Review and edit standard template before previewing. This will not change the template for future emailings, just for this one. To change the template permanently, go to the template page. You may use the tokens below.');
     $storage = $form_state->getStorage();
-    if (pet_isset_or($storage['step']) == 3) {
+    $storage['pet'] = $pet;
+
+    if (!isset($storage['step'])) {
+      $storage['step'] = 1;
+    }
+
+    if ($storage['step'] == 3) {
       drupal_set_message(t('Email(s) sent'));
       $form_state->setStorage([]);
     }
 
-    $step = empty($storage['step']) ? 1 : $storage['step'];
-    $storage['step'] = $step;
-    $storage['pet'] = $pet;
+    $has_recipient_callback = isset($storage['recipient_callback']);
 
-    // Get any query args
-    $nid = $storage['nid'] = pet_is_natural(pet_isset_or($_REQUEST['nid'])) ? $_REQUEST['nid'] : NULL;
-    $uid = $storage['uid'] = pet_is_natural(pet_isset_or($_REQUEST['uid'])) ? $_REQUEST['uid'] : NULL;
-    $recipient_callback = $storage['recipient_callback'] = (
-      pet_isset_or($_REQUEST['recipient_callback']) === 'true' ||
-      pet_isset_or($_REQUEST['uid']) === '0' // backward compatibility
-    );
-
-    switch ($step) {
+    switch ($storage['step']) {
       case 1:
-        if ($recipient_callback) {
-          $default_mail = t('Recipient list will be generated for preview.');
+
+        if ($has_recipient_callback) {
+          $recipients = $this->t('Recipient list will be generated for preview.');
         }
-        elseif (pet_isset_or($storage['recipients_raw'])) {
-          $default_mail = $storage['recipients_raw'];
+        // In case of returning from step 2.
+        elseif (isset($storage['recipients'])) {
+          $recipients = $storage['recipients'];
         }
         else {
-          $default_mail = '';
-          if ($uid) {
-            if ($account = User::load($uid)) {
-              $default_mail = $account->getEmail();
-            }
-            else {
-              drupal_set_message(t('Cannot load a user with uid @uid.', ['@uid' => $uid]), 'error');
-            }
-          }
+          $recipients = \Drupal::currentUser()->getEmail();
         }
+
         $form['recipients'] = [
-          '#title' => t('To'),
-          '#type' => 'email',
+          '#title' => $this->t('To'),
+          '#type' => 'textfield',
           '#required' => TRUE,
-          '#default_value' => $default_mail,
-          '#description' => t('Enter the recipient(s) separated by lines or commas. A separate email will be sent to each, with token substitution if the email corresponds to a site user.'),
-          '#disabled' => $recipient_callback,
+          '#default_value' => $recipients,
+          '#description' => $this->t('Enter the recipient(s) comma separated. A separate email will be sent to each, with user token substitution if the email corresponds to a site user.'),
+          '#disabled' => $has_recipient_callback,
         ];
+
+        $form['reply_to'] = [
+          '#title' => $this->t('Reply-To'),
+          '#type' => 'email',
+          '#required' => FALSE,
+          '#default_value' => isset($storage['reply_to']) ? $storage['reply_to'] : $pet->getReplyTo(),
+          '#description' => $this->t('Reply-To email address. If empty, the site email address will be user.'),
+        ];
+
         $form['copies'] = [
-          '#title' => t('Copies'),
+          '#title' => $this->t('Copies'),
           '#type' => 'details',
-          '#collapsed' => empty($pet->getCCDefault()) && empty($pet->getBCCDefault()),
+          '#open' => $pet->getCc() && $pet->getBcc(),
         ];
+
         $form['copies']['cc'] = [
-          '#title' => t('Cc'),
-          '#type' => 'email',
+          '#title' => $this->t('Cc'),
+          '#type' => 'textfield',
           '#rows' => 3,
-          '#default_value' => pet_isset_or($storage['cc']) ? $storage['cc'] : $pet->getCCDefault(),
-          '#description' => t('Enter any copied emails separated by lines or commas.'),
+          '#default_value' => isset($storage['cc']) ? $storage['cc'] : $pet->getCc(),
+          '#description' => $this->t('Enter any Cc recipients comma separated.'),
         ];
+
         $form['copies']['bcc'] = [
-          '#title' => t('Bcc'),
-          '#type' => 'email',
+          '#title' => $this->t('Bcc'),
+          '#type' => 'textfield',
           '#rows' => 3,
-          '#default_value' => pet_isset_or($storage['bcc']) ? $storage['bcc'] : $pet->getBCCDefault(),
-          '#description' => t('Enter any blind copied emails separated by lines or commas.'),
+          '#default_value' => isset($storage['bcc']) ? $storage['bcc'] : $pet->getBcc(),
+          '#description' => $this->t('Enter any Bcc recipients comma separated.'),
         ];
+
         $form['subject'] = [
           '#type' => 'textfield',
-          '#title' => t('Subject'),
+          '#title' => $this->t('Subject'),
           '#maxlength' => 255,
           '#default_value' => isset($storage['subject']) ? $storage['subject'] : $pet->getSubject(),
           '#required' => TRUE,
         ];
-        if (!(pet_has_mimemail() && $pet->getSendPlain())) {
-          $form['mail_body'] = [
+
+        $body_description = $this->t('Review and edit standard template before previewing. This will not change the template for future emailings, just for this one. To change the template permanently, go to the template page. You may use the tokens below.');
+
+        if (!(PetHelper::hasMimeMail() && $pet->getSendPlain())) {
+          $form['body'] = [
             '#type' => 'textarea',
-            '#title' => t('Body'),
-            '#default_value' => pet_isset_or($storage['mail_body']) ? $storage['mail_body'] : $pet->getMailbody(),
+            '#title' => $this->t('Body'),
+            '#default_value' => isset($storage['body']) ? $storage['body'] : $pet->getBody(),
             '#rows' => 15,
             '#description' => $body_description,
           ];
         }
-        if (pet_has_mimemail()) {
+
+        if (PetHelper::hasMimeMail()) {
           $form['mimemail'] = [
             '#type' => 'details',
-            '#title' => t('Plain text body'),
+            '#title' => $this->t('Plain text body'),
             '#collapsible' => TRUE,
-            '#collapsed' => !(pet_has_mimemail() && $pet->send_plain),
+            '#collapsed' => !(PetHelper::hasMimeMail() && $pet->getSendPlain()),
           ];
-          $form['mimemail']['mail_body_plain'] = [
+
+          $form['mimemail']['body_plain'] = [
             '#type' => 'textarea',
-            '#title' => t('Plain text body'),
-            '#default_value' => isset($storage['mail_body_plain']) ?
-              $storage['mail_body_plain'] :
-              $pet->getMailbodyPlain(),
+            '#title' => $this->t('Plain text body'),
+            '#default_value' => isset($storage['body_plain']) ? $storage['body_plain'] : $pet->getBodyPlain(),
             '#rows' => 15,
             '#description' => $body_description,
           ];
         }
+
         $form['tokens'] = pet_token_help();
+
         $form['preview'] = [
           '#type' => 'submit',
-          '#value' => t('Preview'),
+          '#value' => $this->t('Preview'),
         ];
         break;
 
       case 2:
-        $values = $form_state->getValues();
+      case 3:
         $form['info'] = [
-          '#value' => t('A preview of the email is shown below. If you\'re satisfied, click Send. If not, click Back to edit the email.'),
+          '#markup' => '<p>' . $this->t("A preview of the email is shown below. If you're satisfied, click Send. If not, click Back to edit the email.") . '</p>',
         ];
+
         $form['recipients'] = [
-          '#title' => t('To'),
+          '#title' => $this->t('To'),
           '#type' => 'hidden',
           '#required' => TRUE,
           '#default_value' => $storage['recipients'],
-          '#description' => t('Enter the recipient(s) separated by lines or commas. A separate email will be sent to each, with token substitution if the email corresponds to a site user.'),
-          '#disabled' => $recipient_callback,
+          '#disabled' => $has_recipient_callback,
         ];
+
         $form['recipients_display'] = [
           '#type' => 'textarea',
-          '#title' => t('To'),
+          '#title' => $this->t('To'),
           '#rows' => 4,
-          '#value' => pet_recipients_formatted($storage['recipients']),
-          #disabled' => TRUE,
+          '#value' => $this->formatRecipients($storage['recipients_array']),
+          '#disabled' => TRUE,
         ];
-        if ($values['cc']) {
+
+        if ($storage['reply_to']) {
+          $form['reply_to'] = [
+            '#title' => $this->t('Reply-To'),
+            '#type' => 'email',
+            '#value' => $storage['reply_to'],
+            '#disabled' => TRUE,
+          ];
+        }
+
+        if ($storage['cc']) {
           $form['cc'] = [
             '#type' => 'textarea',
-            '#title' => t('CC'),
+            '#title' => $this->t('Cc'),
             '#rows' => 4,
-            '#value' => $values['cc'],
+            '#value' => $storage['cc'],
             '#disabled' => TRUE,
           ];
         }
-        if ($values['bcc']) {
+
+        if ($storage['bcc']) {
           $form['bcc'] = [
             '#type' => 'textarea',
-            '#title' => t('BCC'),
+            '#title' => $this->t('Bcc'),
             '#rows' => 4,
-            '#value' => $values['bcc'],
+            '#value' => $storage['bcc'],
             '#disabled' => TRUE,
           ];
         }
+
         $form['subject'] = [
           '#type' => 'textfield',
-          '#title' => t('Subject'),
+          '#title' => $this->t('Subject'),
           '#size' => 80,
           '#value' => $storage['subject_preview'],
           '#disabled' => TRUE,
         ];
-        if (!pet_has_mimemail() || !$pet->getSendPlain()) {
+
+        $form['body'] = [
+          '#type' => 'textarea',
+          '#title' => $this->t('Body'),
+          '#rows' => 15,
+          '#value' => $storage['body_preview'],
+          '#disabled' => TRUE,
+        ];
+
+        // todo: review when testing html mails.
+        if (PetHelper::hasMimeMail() && !$pet->getSendPlain()) {
           $form['body_label'] = [
             '#prefix' => '<div class="pet_body_label">',
             '#suffix' => '</div>',
-            '#markup' => '<label>' . t('Body as HTML') . '</label>',
+            '#markup' => '<label>' . $this->t('Body as HTML') . '</label>',
           ];
+
           $form['body_preview'] = [
             '#prefix' => '<div class="pet_body_preview">',
             '#suffix' => '</div>',
             '#markup' => $storage['body_preview'],
           ];
-          $form['mail_body'] = [
-            '#type' => 'textarea',
-            '#title' => t('Body'),
-            '#rows' => 15,
-            '#value' => $storage['body_preview'],
-            '#disabled' => TRUE,
-          ];
         }
-        $plain_text = trim($storage['body_preview_plain']);
-        if (pet_has_mimemail() && ($pet->getSendPlain() || !empty($plain_text))) {
-          $form['mail_body_plain'] = [
+
+        // todo: review when testing html mails.
+        if (PetHelper::hasMimeMail() && $pet->getSendPlain()) {
+          $form['body_plain'] = [
             '#type' => 'textarea',
-            '#title' => t('Plain text body'),
+            '#title' => $this->t('Plain text body'),
             '#rows' => 15,
             '#value' => $storage['body_preview_plain'],
             '#disabled' => TRUE,
           ];
         }
+
         $form['back'] = [
           '#type' => 'submit',
-          '#value' => t('Back'),
+          '#value' => $this->t('Back'),
           '#submit' => ['::stepBack'],
         ];
+
         $form['submit'] = [
           '#type' => 'submit',
-          '#value' => t('Send email(s)'),
+          '#value' => $this->t('Send email(s)'),
         ];
         break;
     }
@@ -219,9 +255,10 @@ class PetPreviewForm extends FormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $recipients_raw = $form_state->getValue('recipients');
-    $recipients = [];
-    $errors = $this->pet_validate_recipients($form_state, $recipients);
+    $recipients_array = [];
+
+    // todo: Make this more generic, and also test CC and BCC input.
+    $errors = $this->validateRecipients($form_state, $recipients_array);
 
     if (!empty($errors)) {
       foreach ($errors as $error) {
@@ -229,8 +266,7 @@ class PetPreviewForm extends FormBase {
       }
     }
     else {
-      $form_state->setValue('recipients', $recipients);
-      $form_state->setValue('recipients_raw', $recipients_raw);
+      $form_state->setValue('recipients_array', $recipients_array);
     }
   }
 
@@ -239,62 +275,46 @@ class PetPreviewForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $storage = $form_state->getStorage();
-    $step = empty($storage['step']) ? 1 : $storage['step'];
-    $storage['step'] = $step;
     $values = $form_state->getValues();
 
-    switch ($step) {
+    switch ($storage['step']) {
       case 1:
         $form_state->setRebuild(TRUE);
-        $storage['recipients_raw'] = $values['recipients'];
+
+        $storage['recipients_array'] = $values['recipients_array'];
         $storage['recipients'] = $values['recipients'];
         $storage['subject'] = $values['subject'];
-        $storage['mail_body'] = pet_isset_or($values['mail_body']);
-        $storage['mail_body_plain'] = pet_isset_or($values['mail_body_plain']);
+        $storage['body'] = isset($values['body']) ? $values['body'] : NULL;
+        $storage['body_plain'] = isset($values['body_plain']) ? $values['body_plain'] : NULL;
+        $storage['reply_to'] = $values['reply_to'];
         $storage['cc'] = $values['cc'];
         $storage['bcc'] = $values['bcc'];
+
         $form_state->setStorage($storage);
-        $this->pet_make_preview($form_state);
+        $this->makePreview($form_state);
         $storage = $form_state->getStorage();
         break;
 
       case 2:
         $form_state->setRebuild(TRUE);
+
+        $recipients = array_keys($storage['recipients_array']);
+
+        /** @var \Drupal\pet\Entity\Pet $pet */
         $pet = $storage['pet'];
-        $recipients = $storage['recipients'];
-        $options = [
-          'nid' => $storage['nid'],
-          'subject' => $storage['subject'],
-          'body' => $storage['mail_body'],
-          'body_plain' => $storage['mail_body_plain'],
-          'from' => NULL,
-          'cc' => $storage['cc'],
-          'bcc' => $storage['bcc'],
-        ];
-        pet_send_mail($pet->id(), $recipients, $options);
+
+        $pet->setSubject($storage['subject']);
+        $pet->setBody($storage['body']);
+        $pet->setBodyPlain($storage['body_plain']);
+        $pet->setReplyTo($storage['reply_to']);
+        $pet->setCc($storage['cc']);
+        $pet->setBcc($storage['bcc']);
+        $pet->sendMail($recipients, []);
+
         break;
     }
 
     $storage['step']++;
-    $form_state->setStorage($storage);
-  }
-
-  /**
-   * Generate a preview of the tokenized email for the first in the list.
-   */
-  public function pet_make_preview(FormStateInterface &$form_state) {
-    $values = $form_state->getValues();
-    $storage = $form_state->getStorage();
-    $params = [
-      'pet_uid' => is_array($storage['recipients']) ? $storage['recipients'][0]['uid'] : NULL,
-      'pet_nid' => $storage['nid'],
-    ];
-    $subs = pet_substitutions($storage['pet'], $params);
-
-    $token = \Drupal::token();
-    $storage['subject_preview'] = $token->replace($values['subject'], $subs);
-    $storage['body_preview'] = $token->replace(pet_isset_or($values['mail_body']), $subs);
-    $storage['body_preview_plain'] = $token->replace(pet_isset_or($values['mail_body_plain']), $subs);
     $form_state->setStorage($storage);
   }
 
@@ -308,37 +328,49 @@ class PetPreviewForm extends FormBase {
 
   /**
    * Validate existence of a non-empty recipient list free of email errors.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param array $recipients_array
+   *   Array to hold the $recipients as array, incl uid.
+   *
+   * @return array
+   *   Array of errors.
+   *
+   * @todo: make more generic, move specific parts to validateForm().
+   * @todo: test recipient callback part.
    */
-  function pet_validate_recipients(FormStateInterface $form_state, &$recipients) {
+  protected function validateRecipients(FormStateInterface &$form_state, array &$recipients_array) {
     $errors = [];
-    $recipients = [];
+    $recipients_array = [];
 
     if ($form_state->getValue('recipient_callback')) {
-      // Get recipients from callback
-      $mails = pet_callback_recipients($form_state);
-      if (!is_array($mails)) {
-        $errors[] = t('There is no recipient callback defined for this template or it is not returning an array.');
+      // todo: test.
+      $items = $this->callbackRecipients($form_state);
+      if (!empty($mails)) {
+        $errors[] = $this->t('There is no recipient callback defined for this template or it is not returning an array.');
         return $errors;
       }
     }
     else {
-      // Get recipients from form field
-      $mails = pet_parse_mails($form_state->getValue('recipients'));
+      // Get recipients from form field.
+      $recipients = explode(',', $form_state->getValue('recipients'));
     }
 
-    // Validate and build recipient array with uid on the fly
-    foreach ($mails as $mail) {
-      if (!\Drupal::service('email.validator')->isValid($mail)) {
-        $errors[] = t('Invalid email address found: %mail.', ['%mail' => $mail]);
+    // Validate and build recipient array with uid on the fly.
+    foreach ($recipients as $recipient) {
+      $recipient = Xss::filter(trim($recipient));
+      if (!\Drupal::service('email.validator')->isValid($recipient)) {
+        $errors[] = $this->t('Invalid email address found: %mail.', ['%mail' => $recipient]);
       }
       else {
-        $recipients[] = ['mail' => $mail, 'uid' => pet_lookup_uid($mail)];
+        $recipients_array[$recipient] = ['uid' => $this->getUidFromEmailAddress($recipient)];
       }
     }
 
-    // Check for no recipients
-    if (empty($errors) && count($recipients) < 1) {
-      $errors[] = t('There are no recipients for this email.');
+    // Check for no recipients.
+    if (empty($errors) && count($recipients_array) < 1) {
+      $errors[] = $this->t('There are no recipients for this email.');
     }
 
     return $errors;
@@ -346,25 +378,100 @@ class PetPreviewForm extends FormBase {
 
   /**
    * Return an array of email recipients provided by a callback function.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   *
+   * @return array
+   *   Recipient email addresses.
+   *
+   * @todo: test
    */
-  function pet_callback_recipients(FormStateInterface $form_state) {
+  protected static function callbackRecipients(FormStateInterface $form_state) {
     $callback = $form_state->getValue('recipient_callback');
 
     if (!empty($callback)) {
       if (function_exists($callback)) {
         $recipients = $callback();
 
-        // Remove uid for backward compatibility
+        // Remove uid for backward compatibility.
         if (isset($recipients) && is_array($recipients)) {
-          $new_recipients = [];
-          foreach ($recipients as $recipient) {
-            $recipient = preg_replace('/^[0-9]*\|/', '', $recipient);
-            $new_recipients[] = $recipient;
-          }
-          return $new_recipients;
+          return $recipients;
         }
       }
     }
-    return NULL;
+
+    return [];
   }
+
+  /**
+   * Format recipients as "email (uid)".
+   *
+   * @param array $recipients
+   *   List of recipient email addresses.
+   *
+   * @return array
+   *   Formatted reciepents.
+   */
+  protected static function formatRecipients(array $recipients) {
+    $build = ['#markup' => ''];
+    $format = "%s (%s)\n";
+
+    foreach ($recipients as $mail => $data) {
+      $uid = $data['uid'] ? new TranslatableMarkup('uid: @uid', ['@uid' => $data['uid']]) : new TranslatableMarkup('no uid');
+      $build['#markup'] .= sprintf($format, $mail, $uid);
+    }
+
+    return $build;
+  }
+
+  /**
+   * Get User id by user email address.
+   *
+   * @param string $email
+   *   The email address.
+   *
+   * @return int
+   *   User id, or 0.
+   */
+  protected static function getUidFromEmailAddress($email) {
+    $user = user_load_by_mail($email);
+    return $user ? $user->id() : 0;
+  }
+
+  /**
+   * Generate a preview of the tokenized email for the first in the list.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   */
+  protected static function makePreview(FormStateInterface &$form_state) {
+    $values = $form_state->getValues();
+    $storage = $form_state->getStorage();
+
+    $first = array_pop($storage['recipients_array']);
+    $uid = isset($first['uid']) ? $first['uid'] : 0;
+    $substitutions = PetHelper::getSubstitutions(['uid' => $uid]);
+
+    $token = \Drupal::token();
+
+    $storage['subject_preview'] = $token->replace($values['subject'], $substitutions);
+
+    if (isset($values['body'])) {
+      $storage['body_preview'] = $token->replace($values['body'], $substitutions);
+    }
+    else {
+      $storage['body_preview'] = NULL;
+    }
+
+    if (isset($values['body_plain'])) {
+      $storage['body_preview_plain'] = $token->replace($values['body_plain'], $substitutions);
+    }
+    else {
+      $storage['body_preview_plain'] = NULL;
+    }
+
+    $form_state->setStorage($storage);
+  }
+
 }

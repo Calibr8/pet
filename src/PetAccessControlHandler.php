@@ -7,26 +7,30 @@ use Drupal\Core\Entity\EntityAccessControlHandler;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 
+/**
+ * Access controller for the Pet entity.
+ *
+ * @see \Drupal\pet\Entity\Pet.
+ */
 class PetAccessControlHandler extends EntityAccessControlHandler {
 
   /**
    * {@inheritdoc}
-   *
-   * Link the activities to the permissions. checkAccess is called with the
-   * $operation as defined in the routing.yml file.
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
+    /** @var \Drupal\pet\Entity\PetInterface $entity */
     switch ($operation) {
       case 'view':
-        return AccessResult::allowedIfHasPermission($account, 'view PET entity');
+        return AccessResult::allowedIfHasPermission($account, 'view pet entity');
 
-      case 'edit':
-        return AccessResult::allowedIfHasPermission($account, 'edit PET entity');
+      case 'update':
+        return AccessResult::allowedIfHasPermission($account, 'edit pet entity');
 
       case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete PET entity');
+        return AccessResult::allowedIfHasPermission($account, 'delete pet entity');
     }
-    return AccessResult::allowed();
+    // Unknown operation, deny.
+    return AccessResult::forbidden();
   }
 
   /**
@@ -36,6 +40,7 @@ class PetAccessControlHandler extends EntityAccessControlHandler {
    * will be created during the 'add' process.
    */
   protected function checkCreateAccess(AccountInterface $account, array $context, $entity_bundle = NULL) {
-    return AccessResult::allowedIfHasPermission($account, 'add PET entity');
+    return AccessResult::allowedIfHasPermission($account, 'add pet entity');
   }
-} 
+
+}
