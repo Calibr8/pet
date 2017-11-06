@@ -23,8 +23,9 @@ class PetForm extends ContentEntityForm {
     $form['mimemail'] = [
       '#type' => 'details',
       '#title' => $this->t('Mime Mail options'),
-      '#open' => TRUE,
       '#description' => $this->t('HTML email support is most easily provided by the <a href="@url">Mime Mail</a> module, which must be installed and enabled.', ['@url' => 'http://drupal.org/project/mimemail']),
+      '#open' => TRUE,
+      '#weight' => 18,
     ];
 
     if (PetHelper::hasMimeMail()) {
@@ -36,19 +37,36 @@ class PetForm extends ContentEntityForm {
     }
 
     $form['tokens'] = pet_token_help();
+    $form['tokens']['#weight'] = 19;
 
+    // Group advanced options.
     $has_administer = \Drupal::currentUser()->hasPermission('administer pet entities');
-    $form['admin'] = [
+    $form['administer'] = [
       '#type' => 'details',
       '#title' => $this->t('Additional options'),
       '#open' => $has_administer,
       '#access' => $has_administer,
+      '#weight' => 20,
     ];
+    $form['cc']['#group'] = 'administer';
+    $form['bcc']['#group'] = 'administer';
+    $form['reply_to']['#group'] = 'administer';
+    $form['recipient_callback']['#group'] = 'administer';
 
-    $form['cc']['#group'] = 'admin';
-    $form['bcc']['#group'] = 'admin';
-    $form['reply_to']['#group'] = 'admin';
-    $form['recipient_callback']['#group'] = 'admin';
+    // Group author info.
+    $form['author_information'] = [
+      '#type' => "details",
+      '#title' => $this->t('Authoring information'),
+      '#open' => TRUE,
+      '#group' => 'advanced',
+      '#weight' => 10,
+    ];
+    $form['user_id']['#group'] = "author_information";
+    unset($form['user_id']['#parents']);
+
+    // Move revision_log_message to revision tab.
+    $form['revision_log_message']['#group'] = "revision_information";
+    unset($form['revision_log_message']['#parents']);
 
     $form['actions']['submit']['#value'] = $this->t('Save Template');
 
