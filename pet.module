@@ -71,8 +71,7 @@ function pet_token_help() {
     $tokens = [
       '#title' => new TranslatableMarkup('Replacement patterns'),
       '#type' => 'details',
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
+      '#open' => TRUE,
       '#description' => new TranslatableMarkup('Make sure that the tokens you choose are available to your template when previewed. The list below includes the standard Nodes and Users, as well as global tokens.'),
     ];
     $tokens['token_tree'] = [
