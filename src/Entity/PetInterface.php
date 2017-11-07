@@ -124,4 +124,55 @@ interface PetInterface extends ContentEntityInterface, EntityChangedInterface, E
 
   public function setReplyTo($reply_to);
 
+  /**
+   * Shortcut to get Pet configuration.
+   *
+   * @return \Drupal\Core\Config\ImmutableConfig
+   *   Pet configuration.
+   */
+  public function getConfig();
+
+  /**
+   * Pet logging level.
+   *
+   * @return int
+   *   Logging level, see PET_LOGGER_NONE, PET_LOGGER_ERRORS or PET_LOGGER_ALL.
+   */
+  public function getLoggingLevel();
+
+  /**
+   * Log message, taking Pet logging configuration into account.
+   *
+   * @param string $message
+   *   Message to log, can include string replacement tokens.
+   * @param array $replacements
+   *   Replacements for the message.
+   * @param string $type
+   *   Message type: 'error' or 'debug'.
+   */
+  public function log($message, array $replacements = [], $type = 'debug');
+
+  /**
+   * Send PET to one or more recipients.
+   *
+   * @param array $recipients
+   *   Recipient email addresses.
+   * @param array $context
+   *   Context items to be used for token substitutions.
+   *   E.g.:
+   *    [
+   *     'uid' => NULL,
+   *     'nid' => 4,
+   *    ]
+   *   'uid' will always be set when preparing data, either the user id matching
+   *   recipient address, or '0' in case of no match.
+   *   Modules providing tokens for PET should implement
+   *   hook_pet_substitutions_alter(&$substitutions).
+   *
+   * @return array
+   *   Result value of MailManager::mail() for each mail keyed by recipient
+   *   email address.
+   */
+  public function sendMail(array $recipients, array $context);
+
 }
