@@ -4,6 +4,7 @@ namespace Drupal\pet\Controller;
 
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Controller\ControllerBase;
+use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\pet\Entity\PetInterface;
@@ -16,6 +17,23 @@ use Drupal\pet\Entity\PetInterface;
 class PetRevisionController extends ControllerBase implements ContainerInjectionInterface {
 
   /**
+   * The date formatter service.
+   *
+   * @var \Drupal\Core\Datetime\DateFormatterInterface
+   */
+  protected $dateFormatter;
+
+  /**
+   * Constructs a PetRevisionController object.
+   *
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $date_formatter
+   *   The date formatter service.
+   */
+  public function __construct(DateFormatterInterface $date_formatter) {
+    $this->dateFormatter = $date_formatter;
+  }
+
+  /**
    * Displays a Pet revision.
    *
    * @param int $pet_revision
@@ -25,8 +43,8 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
    *   An array suitable for drupal_render().
    */
   public function revisionShow($pet_revision) {
-    $pet = \Drupal::entityTypeManager()->getStorage('pet')->loadRevision($pet_revision);
-    $view_builder = \Drupal::entityTypeManager()->getViewBuilder('pet');
+    $pet = static::entityTypeManager()->getStorage('pet')->loadRevision($pet_revision);
+    $view_builder = static::entityTypeManager()->getViewBuilder('pet');
 
     return $view_builder->view($pet);
   }
@@ -41,8 +59,9 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
    *   The page title.
    */
   public function revisionPageTitle($pet_revision) {
-    $pet = \Drupal::entityTypeManager()->getStorage('pet')->loadRevision($pet_revision);
-    $date = \Drupal::service('date.formatter')->format($pet->getRevisionCreationTime(), 'short');
+    /* @var \Drupal\pet\Entity\PetInterface */
+    $pet = static::entityTypeManager()->getStorage('pet')->loadRevision($pet_revision);
+    $date = $this->dateFormatter->format($pet->getRevisionCreationTime(), 'short');
     return $this->t('Revision of %title from %date', ['%title' => $pet->label(), '%date' => $date]);
   }
 
@@ -61,7 +80,9 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
     $langname = $pet->language()->getName();
     $languages = $pet->getTranslationLanguages();
     $has_translations = (count($languages) > 1);
-    $pet_storage = \Drupal::entityTypeManager()->getStorage('pet');
+
+    /* @var \Drupal\pet\PetStorageInterface */
+    $pet_storage = static::entityTypeManager()->getStorage('pet');
 
     $build['#title'] = $has_translations ? $this->t('@langname revisions for %title', ['@langname' => $langname, '%title' => $pet->label()]) : $this->t('Revisions for %title', ['%title' => $pet->label()]);
     $header = [$this->t('Revision'), $this->t('Operations')];
@@ -87,7 +108,7 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
         ];
 
         // Use revision link to link to revisions that are not active.
-        $date = \Drupal::service('date.formatter')->format($revision->getRevisionCreationTime(), 'short');
+        $date = $this->dateFormatter->format($revision->getRevisionCreationTime(), 'short');
         if ($vid != $pet->getRevisionId()) {
           $link = \Drupal::service('link_generator')->generate($date, new Url('entity.pet.revision', ['pet' => $pet->id(), 'pet_revision' => $vid]));
         }
