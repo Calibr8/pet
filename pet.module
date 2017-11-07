@@ -30,7 +30,7 @@ function pet_hook_info() {
  */
 function pet_mail($key, &$message, $params) {
 
-  /** @var \Drupal\pet\Entity\Pet $pet */
+  /** @var \Drupal\pet\Entity\PetInterface $pet */
   $pet = $params['pet'];
   $context = $params['context'];
 

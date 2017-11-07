@@ -303,7 +303,7 @@ class PetPreviewForm extends FormBase {
 
         $recipients = array_keys($storage['recipients_array']);
 
-        /** @var \Drupal\pet\Entity\Pet $pet */
+        /** @var \Drupal\pet\Entity\PetInterface $pet */
         $pet = $storage['pet'];
 
         $pet->setSubject($storage['subject']);

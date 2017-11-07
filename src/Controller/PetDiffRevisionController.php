@@ -27,7 +27,7 @@ class PetDiffRevisionController extends PluginRevisionController {
    *   Render array containing the revisions table for $pet.
    */
   public function revisionOverview(PetInterface $pet) {
-    return $this->formBuilder()->getForm('Drupal\pet\Form\PetDiffRevisionOverviewForm', $pet);
+    return $this->formBuilder()->getForm('Drupal\pet\Form\PetDiffRevisionOverviewForm', NULL, $pet);
   }
 
   /**
@@ -41,7 +41,8 @@ class PetDiffRevisionController extends PluginRevisionController {
    *   Vid of the node revision from the right.
    * @param string $filter
    *   If $filter == 'raw' raw text is compared (including html tags)
-   *   If $filter == 'raw-plain' markdown function is applied to the text before comparison.
+   *   If $filter == 'raw-plain' markdown function is applied to the text
+   *   before comparison.
    *
    * @return array
    *   Table showing the diff between the two node revisions.
@@ -49,7 +50,9 @@ class PetDiffRevisionController extends PluginRevisionController {
   public function comparePetRevisions(PetInterface $pet, $left_revision, $right_revision, $filter) {
     $storage = $this->entityTypeManager()->getStorage('pet');
     $route_match = \Drupal::routeMatch();
+    /** @var \Drupal\pet\Entity\PetInterface $left_revision */
     $left_revision = $storage->loadRevision($left_revision);
+    /** @var \Drupal\pet\Entity\PetInterface $right_revision */
     $right_revision = $storage->loadRevision($right_revision);
     $build = $this->compareEntityRevisions($route_match, $left_revision, $right_revision, $filter);
     return $build;

@@ -2,11 +2,12 @@
 
 namespace Drupal\pet\Entity;
 
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
-use Drupal\Core\Entity\RevisionableContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Entity\RevisionableContentEntityBase;
+use Drupal\Core\Entity\RevisionLogEntityTrait;
 use Drupal\user\UserInterface;
 
 /**
@@ -71,6 +72,7 @@ use Drupal\user\UserInterface;
 class Pet extends RevisionableContentEntityBase implements PetInterface {
 
   use EntityChangedTrait;
+  use RevisionLogEntityTrait;
 
   /**
    * Logging levels.
@@ -382,90 +384,15 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getTitle() {
-    return $this->get('title')->value;
+  public function getBcc() {
+    return $this->get('bcc')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setTitle($title) {
-    $this->set('title', $title);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCreatedTime() {
-    return $this->get('created')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setCreatedTime($timestamp) {
-    $this->set('created', $timestamp);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getOwner() {
-    return $this->get('user_id')->entity;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getOwnerId() {
-    return $this->get('user_id')->target_id;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setOwnerId($uid) {
-    $this->set('user_id', $uid);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setOwner(UserInterface $account) {
-    $this->set('user_id', $account->id());
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setPublished($published) {
-    $this->set('status', $published ? TRUE : FALSE);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getSubject() {
-    return $this->get('subject')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setSubject($subject) {
-    $this->set('subject', $subject);
+  public function setBcc($bcc) {
+    $this->set('bcc', $bcc);
     return $this;
   }
 
@@ -502,15 +429,60 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getSendPlain() {
-    return $this->get('send_plain')->value;
+  public function getCc() {
+    return $this->get('cc')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setSendPlain($send_plain) {
-    $this->set('send_plain', $send_plain);
+  public function setCc($cc) {
+    $this->set('cc', $cc);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getCreatedTime() {
+    return $this->get('created')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCreatedTime($timestamp) {
+    $this->set('created', $timestamp);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOwner() {
+    return $this->get('user_id')->entity;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwner(UserInterface $account) {
+    $this->set('user_id', $account->id());
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getOwnerId() {
+    return $this->get('user_id')->target_id;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setOwnerId($uid) {
+    $this->set('user_id', $uid);
     return $this;
   }
 
@@ -532,36 +504,6 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getCc() {
-    return $this->get('cc')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setCc($cc) {
-    $this->set('cc', $cc);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getBcc() {
-    return $this->get('bcc')->value;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setBcc($bcc) {
-    $this->set('bcc', $bcc);
-    return $this;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getReplyTo() {
     return $this->get('reply_to')->value;
   }
@@ -571,6 +513,66 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
    */
   public function setReplyTo($reply_to) {
     $this->set('reply_to', $reply_to);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSendPlain() {
+    return $this->get('send_plain')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSendPlain($send_plain) {
+    $this->set('send_plain', $send_plain);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSubject() {
+    return $this->get('subject')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setSubject($subject) {
+    $this->set('subject', $subject);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getTitle() {
+    return $this->get('title')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setTitle($title) {
+    $this->set('title', $title);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPublished() {
+    return (bool) $this->getEntityKey('status');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setPublished($published) {
+    $this->set('status', $published ? TRUE : FALSE);
     return $this;
   }
 

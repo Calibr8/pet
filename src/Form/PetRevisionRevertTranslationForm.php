@@ -93,7 +93,7 @@ class PetRevisionRevertTranslationForm extends PetRevisionRevertForm {
   protected function prepareRevertedRevision(PetInterface $revision, FormStateInterface $form_state) {
     $revert_untranslated_fields = $form_state->getValue('revert_untranslated_fields');
 
-    /** @var \Drupal\pet\Entity\PetInterface $default_revision */
+    /** @var \Drupal\pet\Entity\PetInterface $latest_revision */
     $latest_revision = $this->petStorage->load($revision->id());
     $latest_revision_translation = $latest_revision->getTranslation($this->langcode);
 

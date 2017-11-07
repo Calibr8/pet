@@ -44,6 +44,7 @@ class PetListBuilder extends EntityListBuilder {
    * {@inheritdoc}
    */
   public function buildRow(EntityInterface $entity) {
+    /** @var \Drupal\pet\Entity\PetInterface $entity */
     $pid = $entity->id();
     $row['id'] = $pid;
 

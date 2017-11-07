@@ -6,6 +6,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
 use Drupal\diff\Form\RevisionOverviewForm;
+use Drupal\pet\Entity\PetInterface;
 
 /**
  * Provides a form for Pet revision overview page.
@@ -15,13 +16,14 @@ class PetDiffRevisionOverviewForm extends RevisionOverviewForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $pet = NULL) {
+  public function buildForm(array $form, FormStateInterface $form_state, $node = NULL, PetInterface $pet = NULL) {
     $account = $this->currentUser;
-    /** @var \Drupal\pet\Entity\PetInterface $pet */
     $langcode = $pet->language()->getId();
     $langname = $pet->language()->getName();
     $languages = $pet->getTranslationLanguages();
     $has_translations = (count($languages) > 1);
+
+    /** @var \Drupal\pet\PetStorageInterface $pet_storage */
     $pet_storage = $this->entityTypeManager->getStorage('pet');
 
     $pagerLimit = $this->config->get('general_settings.revision_pager_limit');
@@ -83,7 +85,7 @@ class PetDiffRevisionOverviewForm extends RevisionOverviewForm {
       if (isset($vids[$key + 1])) {
         $previous_revision = $pet_storage->loadRevision($vids[$key + 1]);
       }
-      /** @var \Drupal\Core\Entity\ContentEntityInterface $revision */
+      /** @var \Drupal\pet\Entity\PetInterface $revision */
       if ($revision = $pet_storage->loadRevision($vid)) {
         if ($revision->hasTranslation($langcode) && $revision->getTranslation($langcode)->isRevisionTranslationAffected()) {
           $username = array(

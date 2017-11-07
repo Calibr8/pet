@@ -29,7 +29,7 @@ class PetRevisionDeleteForm extends ConfirmFormBase {
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected $PetStorage;
+  protected $petStorage;
 
   /**
    * The database connection.
@@ -47,7 +47,7 @@ class PetRevisionDeleteForm extends ConfirmFormBase {
    *   The database connection.
    */
   public function __construct(EntityStorageInterface $entity_storage, Connection $connection) {
-    $this->PetStorage = $entity_storage;
+    $this->petStorage = $entity_storage;
     $this->connection = $connection;
   }
 
@@ -55,9 +55,8 @@ class PetRevisionDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    $entity_manager = $container->get('entity.manager');
     return new static(
-      $entity_manager->getStorage('pet'),
+      $container->get('entity.manager')->getStorage('pet'),
       $container->get('database')
     );
   }
@@ -95,7 +94,7 @@ class PetRevisionDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $pet_revision = NULL) {
-    $this->revision = $this->PetStorage->loadRevision($pet_revision);
+    $this->revision = $this->petStorage->loadRevision($pet_revision);
     $form = parent::buildForm($form, $form_state);
 
     return $form;
@@ -105,7 +104,7 @@ class PetRevisionDeleteForm extends ConfirmFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $this->PetStorage->deleteRevision($this->revision->getRevisionId());
+    $this->petStorage->deleteRevision($this->revision->getRevisionId());
 
     $this->logger('content')->notice('Pet: deleted %title revision %revision.', ['%title' => $this->revision->label(), '%revision' => $this->revision->getRevisionId()]);
     drupal_set_message(

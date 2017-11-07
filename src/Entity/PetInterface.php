@@ -16,24 +16,21 @@ use Drupal\user\EntityOwnerInterface;
  */
 interface PetInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface, RevisionLogInterface {
 
-  /**
-   * Get the Pet title.
-   *
-   * @return string
-   *   Pet title.
-   */
-  public function getTitle();
+  public function getBcc();
 
-  /**
-   * Set the Pet title.
-   *
-   * @param string $title
-   *   Title.
-   *
-   * @return \Drupal\pet\Entity\PetInterface
-   *   Pet entity.
-   */
-  public function setTitle($title);
+  public function setBcc($bcc);
+
+  public function getBody();
+
+  public function setBody($mail_body);
+
+  public function getBodyPlain();
+
+  public function setBodyPlain($mail_body_plain);
+
+  public function getCc();
+
+  public function setCc($cc);
 
   /**
    * Gets the Pet creation timestamp.
@@ -54,75 +51,48 @@ interface PetInterface extends ContentEntityInterface, EntityChangedInterface, E
    */
   public function setCreatedTime($timestamp);
 
-  /**
-   * Gets the Pet revision creation timestamp.
-   *
-   * @return int
-   *   The UNIX timestamp of when this revision was created.
-   */
-  public function getRevisionCreationTime();
+  public function getRecipientCallback();
 
-  /**
-   * Sets the Pet revision creation timestamp.
-   *
-   * @param int $timestamp
-   *   The UNIX timestamp of when this revision was created.
-   *
-   * @return \Drupal\pet\Entity\PetInterface
-   *   The called Pet entity.
-   */
-  public function setRevisionCreationTime($timestamp);
+  public function setRecipientCallback($recipient_callback);
 
-  /**
-   * Gets the Pet revision author.
-   *
-   * @return \Drupal\user\UserInterface
-   *   The user entity for the revision author.
-   */
-  public function getRevisionUser();
+  public function getReplyTo();
 
-  /**
-   * Sets the Pet revision author.
-   *
-   * @param int $uid
-   *   The user ID of the revision author.
-   *
-   * @return \Drupal\pet\Entity\PetInterface
-   *   The called Pet entity.
-   */
-  public function setRevisionUserId($uid);
-
-  public function getSubject();
-
-  public function setSubject($subject);
-
-  public function getBody();
-
-  public function setBody($mail_body);
-
-  public function getBodyPlain();
-
-  public function setBodyPlain($mail_body_plain);
+  public function setReplyTo($reply_to);
 
   public function getSendPlain();
 
   public function setSendPlain($send_plain);
 
-  public function getRecipientCallback();
+  public function getSubject();
 
-  public function setRecipientCallback($recipient_callback);
+  public function setSubject($subject);
 
-  public function getCc();
+  /**
+   * Get the Pet title.
+   *
+   * @return string
+   *   Pet title.
+   */
+  public function getTitle();
 
-  public function setCc($cc);
+  /**
+   * Set the Pet title.
+   *
+   * @param string $title
+   *   Title.
+   *
+   * @return \Drupal\pet\Entity\PetInterface
+   *   Pet entity.
+   */
+  public function setTitle($title);
 
-  public function getBcc();
+  public function isPublished();
 
-  public function setBcc($bcc);
+  public function setPublished($published);
 
-  public function getReplyTo();
-
-  public function setReplyTo($reply_to);
+  /*
+   * Class specific functions.
+   */
 
   /**
    * Shortcut to get Pet configuration.

@@ -8,6 +8,7 @@ use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\DependencyInjection\ContainerInjectionInterface;
 use Drupal\Core\Url;
 use Drupal\pet\Entity\PetInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class PetRevisionController.
@@ -34,6 +35,15 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('date.formatter')
+    );
+  }
+
+  /**
    * Displays a Pet revision.
    *
    * @param int $pet_revision
@@ -43,6 +53,7 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
    *   An array suitable for drupal_render().
    */
   public function revisionShow($pet_revision) {
+    /* @var \Drupal\pet\Entity\PetInterface $pet*/
     $pet = static::entityTypeManager()->getStorage('pet')->loadRevision($pet_revision);
     $view_builder = static::entityTypeManager()->getViewBuilder('pet');
 
@@ -59,7 +70,7 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
    *   The page title.
    */
   public function revisionPageTitle($pet_revision) {
-    /* @var \Drupal\pet\Entity\PetInterface */
+    /* @var \Drupal\pet\Entity\PetInterface $pet*/
     $pet = static::entityTypeManager()->getStorage('pet')->loadRevision($pet_revision);
     $date = $this->dateFormatter->format($pet->getRevisionCreationTime(), 'short');
     return $this->t('Revision of %title from %date', ['%title' => $pet->label(), '%date' => $date]);
@@ -81,7 +92,7 @@ class PetRevisionController extends ControllerBase implements ContainerInjection
     $languages = $pet->getTranslationLanguages();
     $has_translations = (count($languages) > 1);
 
-    /* @var \Drupal\pet\PetStorageInterface */
+    /* @var \Drupal\pet\PetStorageInterface $pet_storage*/
     $pet_storage = static::entityTypeManager()->getStorage('pet');
 
     $build['#title'] = $has_translations ? $this->t('@langname revisions for %title', ['@langname' => $langname, '%title' => $pet->label()]) : $this->t('Revisions for %title', ['%title' => $pet->label()]);
