@@ -1,0 +1,85 @@
+uuid: ad93af23-4201-4a27-9d93-bebcb1683fd1
+langcode: nl
+status: true
+dependencies:
+  module:
+    - pet
+id: pet.pet.default
+targetEntityType: pet
+bundle: pet
+mode: default
+content:
+  bcc:
+    label: above
+    type: string
+    weight: -1
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  cc:
+    label: above
+    type: string
+    weight: -2
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  mail_body:
+    label: above
+    type: basic_string
+    weight: -6
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  mail_body_plain:
+    label: above
+    type: basic_string
+    weight: -5
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  recipient_callback:
+    label: above
+    type: string
+    weight: 0
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  reply_to:
+    label: above
+    type: basic_string
+    weight: -3
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  send_plain:
+    label: above
+    type: boolean
+    weight: -4
+    region: content
+    settings:
+      format: default
+      format_custom_false: ''
+      format_custom_true: ''
+    third_party_settings: {  }
+  subject:
+    label: above
+    type: string
+    weight: -7
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+  title:
+    label: above
+    type: string
+    weight: -8
+    region: content
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+hidden:
+  langcode: true
+  user_id: true
