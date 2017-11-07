@@ -86,3 +86,14 @@ function pet_token_help() {
   }
   return $tokens;
 }
+
+/**
+ * Implements hook_local_tasks_alter().
+ */
+function pet_local_tasks_alter(&$local_tasks) {
+
+  // Remove additional 'Revisions' tab added by entity module.
+  if (isset($local_tasks['entity.revisions_overview:pet'])) {
+    unset($local_tasks['entity.revisions_overview:pet']);
+  }
+}
