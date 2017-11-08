@@ -1,0 +1,15 @@
+{
+    "name": "calibrate/pet",
+    "description": "Previewable Email Templates",
+    "type": "drupal-custom",
+    "keywords": ["Drupal 8","Calibr8","Pet"],
+    "homepage": "https://github.com/Calibr8/pet",
+    "license": "GPL-2.0+",
+    "authors": [
+        {
+            "name": "Andreas De Rijcke",
+            "email": "andreas.derijcke@calibrate.be",
+            "homepage": "https://www.calibrate.be"
+        }
+    ]
+}
