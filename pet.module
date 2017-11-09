@@ -45,6 +45,20 @@ function pet_mail($key, &$message, $params) {
     $message['headers']['Bcc'] = $bcc;
   }
 
+  // Make sure the 'From' header uses the site name in pet's language.
+  $language_manager = \Drupal::service('language_manager');
+  $langcode = $pet->get('langcode')->getValue()[0]['value'];
+  $language = $language_manager->getLanguage($langcode);
+  $original_language = $language_manager->getConfigOverrideLanguage();
+  $language_manager->setConfigOverrideLanguage($language);
+
+  $site_config = \Drupal::config('system.site');
+  $site_mail = $site_config->get('mail');
+  $message['headers']['From'] = $site_config->get('name') . ' <' . $site_mail . '>';
+
+  $language_manager->setConfigOverrideLanguage($original_language);
+
+  // Replace tokens, if any.
   $message['subject'] = $token->replace($pet->getSubject(), $substitutions, ['clear' => TRUE]);
   $message['body'][] = $token->replace($pet->getBody(), $substitutions, ['clear' => TRUE]);
 
