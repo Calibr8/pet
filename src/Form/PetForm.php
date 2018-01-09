@@ -22,18 +22,34 @@ class PetForm extends ContentEntityForm {
     $form['mimemail'] = [
       '#type' => 'details',
       '#title' => $this->t('Mime Mail options'),
-      '#description' => $this->t('HTML email support is most easily provided by the <a href="@url">Mime Mail</a> module, which must be installed and enabled.', ['@url' => 'http://drupal.org/project/mimemail']),
       '#open' => TRUE,
       '#weight' => 18,
     ];
 
     if (PetHelper::hasMimeMail()) {
+      $form['mail_body']['widget'][0]['value']['#description'] = $form['mail_body']['widget'][0]['value']['#description']->__toString() . '<br>' . $this->t('When empty, Mime Mail will create a plain text version from "HTML body".');
+
       $form['send_plain']['#group'] = 'mimemail';
-      $form['mail_body_plain']['#group'] = 'mimemail';
+      $form['mail_body_html']['#group'] = 'mimemail';
+      $form['mail_body_html']['widget'][0]['value']['#base_type'] = $form['mail_body_html']['widget'][0]['value']['#type'];
+      $form['mail_body_html']['widget'][0]['value']['#type'] = 'text_format';
+
+      // Get a valid format.
+      $format = $form['format']['widget'][0]['value']['#default_value'];
+      if (!$format) {
+        $format_mime = Drupal::config('mimemail.settings')->get('format');
+        $format = $format_mime ? $format_mime : filter_fallback_format();
+      }
+      $form['mail_body_html']['widget'][0]['value']['#format'] = $format;
     }
     else {
-      unset($form['send_plain'], $form['mail_body_plain']);
+      $form['mimemail']['#description'] = $this->t('HTML email support is most easily provided by the <a href="@url" target="_blank">Mime Mail</a> module, which must be installed and enabled.', ['@url' => 'http://drupal.org/project/mimemail']);
+      unset($form['send_plain'], $form['mail_body_html']);
     }
+
+    // For some reason, if basefield definition uses 'hidden', the field won't
+    // show up at all, so we use 'string_textfield' and hide it here.
+    $form['format']['widget'][0]['value']['#type'] = 'hidden';
 
     $form['tokens'] = pet_token_help();
     $form['tokens']['#weight'] = 19;
@@ -70,6 +86,20 @@ class PetForm extends ContentEntityForm {
     $form['actions']['submit']['#value'] = $this->t('Save Template');
 
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+
+    // Split up body and its format.
+    $values = $form_state->getValues();
+    $values['format'][0]['value'] = $values['mail_body_html'][0]['value']['format'];
+    $values['mail_body_html'][0]['value'] = $values['mail_body_html'][0]['value']['value'];
+    $form_state->setValues($values);
+
+    parent::validateForm($form, $form_state);
   }
 
   /**

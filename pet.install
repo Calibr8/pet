@@ -1,0 +1,116 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the pet module.
+ */
+
+use Drupal\Core\Field\BaseFieldDefinition;
+
+/**
+ * Update pet data to new schema.
+ *
+ * To avoid confusion when adding Mime Mail support, (Mail) Body field will
+ * always contain plain text from now on.
+ * New 'Html body' field will appear when Mime Mail is enabled, and allows for
+ * HTLM version.
+ * The old 'Mail Body Plain' field will be removed.
+ *
+ * Field data will be moved to their new/proper locations.
+ *
+ * Mime Mail editor format (/admin/config/system/mimemail#edit-format) will be
+ * preset, but not applied.
+ *
+ * Review HTML version for each Pet and save to make sure the final version is
+ * as desired!
+ */
+function pet_update_8101(&$sandbox) {
+  $manager = \Drupal::entityDefinitionUpdateManager();
+
+  $mail_body_html = BaseFieldDefinition::create('string_long')
+    ->setLabel(t('HTML body'))
+    ->setDescription(t('The HTML body of the email template. May include tokens of any token type specified below.'))
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDisplayOptions('view', [
+      'label' => 'above',
+      'type' => 'string',
+      'weight' => -5,
+    ])
+    ->setDisplayOptions('form', [
+      'type' => 'string_textarea',
+      'weight' => -5,
+      'settings' => [
+        'rows' => 4,
+      ],
+    ])
+    ->setDisplayConfigurable('form', TRUE)
+    ->setDisplayConfigurable('view', TRUE);
+  $manager->installFieldStorageDefinition('mail_body_html', 'pet', 'pet', $mail_body_html);
+
+  $format = BaseFieldDefinition::create('string')
+    ->setLabel(t('Format'))
+    ->setDescription(t('The HTML format.'))
+    ->setDefaultValue(NULL)
+    ->setRevisionable(TRUE)
+    ->setTranslatable(TRUE)
+    ->setDisplayOptions('form', [
+      'type' => 'string_textfield',
+      'weight' => -4,
+    ]);
+  $manager->installFieldStorageDefinition('format', 'pet', 'pet', $format);
+
+  $send_plain = $manager->getFieldStorageDefinition('send_plain', 'pet');
+  $send_plain->setDescription(t('If checked, only the plain text will be sent. If unchecked both will be sent as multipart mime.'));
+  $manager->updateFieldStorageDefinition($send_plain);
+
+  // Copy field data to new columns.
+  // @todo: make table select dynamic.
+  // @see https://www.drupal.org/node/2535476
+  $database = \Drupal::database();
+  $editor_format = Drupal::configFactory()->get('mimemail.settings')->get('format');
+
+  $pets_field_data = $database->select('pets_field_data', 'pet')
+    ->fields('pet', ['id', 'mail_body', 'mail_body_plain'])
+    ->execute()
+    ->fetchAllAssoc('id');
+
+  foreach ($pets_field_data as $id => $field_data) {
+    $fields = [
+      'mail_body' => empty($field_data->mail_body_plain) ? $field_data->mail_body : $field_data->mail_body_plain,
+      'mail_body_html' => empty($field_data->mail_body_plain) ? '' : $field_data->mail_body,
+      'mail_body_plain' => NULL,
+      'send_plain' => empty($field_data->mail_body_plain) ? 1 : 0,
+      'format' => empty($field_data->mail_body_plain) ? NULL : $editor_format,
+    ];
+
+    $database->update('pets_field_data')
+      ->fields($fields)
+      ->condition('id', $id)
+      ->execute();
+  }
+
+  $pets_field_revision = $database->select('pets_field_revision', 'pet')
+    ->fields('pet', ['id', 'mail_body', 'mail_body_plain'])
+    ->execute()
+    ->fetchAllAssoc('id');
+
+  foreach ($pets_field_revision as $id => $field_revision) {
+    $fields = [
+      'mail_body' => empty($field_revision->mail_body_plain) ? $field_revision->mail_body : $field_revision->mail_body_plain,
+      'mail_body_html' => empty($field_revision->mail_body_plain) ? '' : $field_revision->mail_body,
+      'mail_body_plain' => NULL,
+      'send_plain' => empty($field_revision->mail_body_plain) ? 1 : 0,
+      'format' => empty($field_data->mail_body_plain) ? NULL : $editor_format,
+    ];
+
+    $database->update('pets_field_revision')
+      ->fields($fields)
+      ->condition('id', $id)
+      ->execute();
+  }
+
+  // Remove old mail_body_plain field.
+  $mail_body_plain = $manager->getFieldStorageDefinition('mail_body_plain', 'pet');
+  $manager->uninstallFieldStorageDefinition($mail_body_plain);
+}

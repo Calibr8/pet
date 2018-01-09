@@ -1,11 +1,10 @@
-div.pet_body_label label {
-  display: block;
-  font-weight: bold;
-}
-div.pet_body_preview {
-  margin-top: 2px;
-  margin-bottom: 10px;
-  margin-right: 29px;
-  padding: .3em;
-  border: 1px solid #999;
+div.form-type-pet .preview {
+  border: 1px solid #d4d4d4;
+  background-color: hsla(0, 0%, 0%, .08);
+  box-sizing: border-box;
+  padding: .3em .4em .3em .5em;
+  max-width: 100%;
+  border-radius: 2px;
+  font-size: 1em;
+  color: #595959;
 }

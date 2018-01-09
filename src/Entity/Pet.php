@@ -213,8 +213,8 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
       ->setDisplayConfigurable('view', TRUE);
 
     $fields['mail_body'] = BaseFieldDefinition::create('string_long')
-      ->setLabel(t('Mail Body'))
-      ->setDescription(t('The body of the email template. May include tokens of any token type specified below.'))
+      ->setLabel(t('Body'))
+      ->setDescription(t('The plain text body of the email template. May include tokens of any token type specified below.'))
       ->setDefaultValue(NULL)
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE)
@@ -233,9 +233,9 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['mail_body_plain'] = BaseFieldDefinition::create('string_long')
-      ->setLabel(t('Mail Body Plain'))
-      ->setDescription(t('The plain text body of the email template. May include tokens of any token type specified below. If left empty Mime Mail will use drupal_html_to_text() to create a plain text version of the email.'))
+    $fields['mail_body_html'] = BaseFieldDefinition::create('string_long')
+      ->setLabel(t('HTML body'))
+      ->setDescription(t('The HTML body of the email template. May include tokens of any token type specified below.'))
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE)
       ->setDisplayOptions('view', [
@@ -253,9 +253,20 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
+    $fields['format'] = BaseFieldDefinition::create('string')
+      ->setLabel(t('Format'))
+      ->setDescription(t('HTML format.'))
+      ->setDefaultValue(NULL)
+      ->setRevisionable(TRUE)
+      ->setTranslatable(TRUE)
+      ->setDisplayOptions('form', [
+        'type' => 'string_textfield',
+        'weight' => -4,
+      ]);
+
     $fields['send_plain'] = BaseFieldDefinition::create('boolean')
       ->setLabel(t('Send only plain text'))
-      ->setDescription(t('Send email as plain text only. If checked, only the plain text here will be sent. If unchecked both will be sent as multipart mime.Send email as plain text only. If checked, only the plain text here will be sent. If unchecked both will be sent as multipart mime..'))
+      ->setDescription(t('If checked, only the plain text will be sent. If unchecked both will be sent as multipart mime.'))
       ->setRevisionable(TRUE)
       ->setTranslatable(TRUE)
       ->setDisplayOptions('view', [
@@ -414,15 +425,15 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBodyPlain() {
-    return $this->get('mail_body_plain')->value;
+  public function getBodyHtml() {
+    return $this->get('mail_body_html')->value;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function setBodyPlain($mail_body_plain) {
-    $this->set('mail_body_plain', $mail_body_plain);
+  public function setBodyHtml($mail_body_html) {
+    $this->set('mail_body_html', $mail_body_html);
     return $this;
   }
 
@@ -453,6 +464,21 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
    */
   public function setCreatedTime($timestamp) {
     $this->set('created', $timestamp);
+    return $this;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormat() {
+    return $this->get('format')->value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setFormat($format) {
+    $this->set('format', $format);
     return $this;
   }
 

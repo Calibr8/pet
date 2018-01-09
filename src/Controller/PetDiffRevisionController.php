@@ -40,7 +40,7 @@ class PetDiffRevisionController extends PluginRevisionController {
    * @param int $right_revision
    *   Vid of the node revision from the right.
    * @param string $filter
-   *   If $filter == 'raw' raw text is compared (including html tags)
+   *   If $filter == 'raw' raw text is compared (including HTML tags)
    *   If $filter == 'raw-plain' markdown function is applied to the text
    *   before comparison.
    *

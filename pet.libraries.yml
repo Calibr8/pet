@@ -1,5 +1,5 @@
-pet.general:
-  version: 1.x
+pet.preview:
+  version: VERSION
   css:
     theme:
       css/pet.css: {}

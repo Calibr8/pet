@@ -11,5 +11,8 @@
             "email": "andreas.derijcke@calibrate.be",
             "homepage": "https://www.calibrate.be"
         }
-    ]
+    ],
+    "require": {
+        "drupal/token": "^1.1"
+    }
 }

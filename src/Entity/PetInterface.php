@@ -20,13 +20,43 @@ interface PetInterface extends ContentEntityInterface, EntityChangedInterface, E
 
   public function setBcc($bcc);
 
+  /**
+   * Get plain body text.
+   *
+   * @return string
+   *   Body text.
+   */
   public function getBody();
 
+  /**
+   * Set the plain body text.
+   *
+   * @param string $mail_body
+   *   Body text.
+   *
+   * @return \Drupal\pet\Entity\PetInterface
+   *   The called Pet entity.
+   */
   public function setBody($mail_body);
 
-  public function getBodyPlain();
+  /**
+   * Get HTML body text.
+   *
+   * @return string
+   *   HTML body text.
+   */
+  public function getBodyHtml();
 
-  public function setBodyPlain($mail_body_plain);
+  /**
+   * Set the HTML body text.
+   *
+   * @param string $mail_body_html
+   *   HTML body text.
+   *
+   * @return \Drupal\pet\Entity\PetInterface
+   *   The called Pet entity.
+   */
+  public function setBodyHtml($mail_body_html);
 
   public function getCc();
 
@@ -50,6 +80,25 @@ interface PetInterface extends ContentEntityInterface, EntityChangedInterface, E
    *   The called Pet entity.
    */
   public function setCreatedTime($timestamp);
+
+  /**
+   * Get HTML body format id.
+   *
+   * @return string
+   *   The format id.
+   */
+  public function getFormat();
+
+  /**
+   * Set the HTML body format.
+   *
+   * @param string $format
+   *   The format id.
+   *
+   * @return \Drupal\pet\Entity\PetInterface
+   *   The called Pet entity.
+   */
+  public function setFormat($format);
 
   public function getRecipientCallback();
 

@@ -5,6 +5,7 @@ namespace Drupal\pet\Form;
 use Drupal\Component\Utility\Xss;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Mail\MailFormatHelper;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\pet\Entity\PetInterface;
 use Drupal\pet\Utility\PetHelper;
@@ -14,7 +15,7 @@ use Drupal\pet\Utility\PetHelper;
  *
  * @package Drupal\pet\Form
  *
- * @todo: review, check and test.
+ * @todo: review, check and test recipient_callback part.
  */
 class PetPreviewForm extends FormBase {
 
@@ -34,11 +35,6 @@ class PetPreviewForm extends FormBase {
 
     if (!isset($storage['step'])) {
       $storage['step'] = 1;
-    }
-
-    if ($storage['step'] == 3) {
-      drupal_set_message(t('Email(s) sent'));
-      $form_state->setStorage([]);
     }
 
     $has_recipient_callback = isset($storage['recipient_callback']);
@@ -102,38 +98,46 @@ class PetPreviewForm extends FormBase {
           '#maxlength' => 255,
           '#default_value' => isset($storage['subject']) ? $storage['subject'] : $pet->getSubject(),
           '#required' => TRUE,
+          '#description' => $this->t('The subject line of the email template. May include tokens of any token type specified below.'),
         ];
 
-        $body_description = $this->t('Review and edit standard template before previewing. This will not change the template for future emailings, just for this one. To change the template permanently, go to the template page. You may use the tokens below.');
-
-        if (!(PetHelper::hasMimeMail() && $pet->getSendPlain())) {
-          $form['body'] = [
-            '#type' => 'textarea',
-            '#title' => $this->t('Body'),
-            '#default_value' => isset($storage['body']) ? $storage['body'] : $pet->getBody(),
-            '#rows' => 15,
-            '#description' => $body_description,
-          ];
-        }
+        $form['body'] = [
+          '#type' => 'textarea',
+          '#title' => $this->t('Body'),
+          '#default_value' => isset($storage['body']) ? $storage['body'] : $pet->getBody(),
+          '#rows' => 15,
+          '#description' => $this->t('The body of the email template. May include tokens of any token type specified below.'),
+        ];
 
         if (PetHelper::hasMimeMail()) {
           $form['mimemail'] = [
             '#type' => 'details',
-            '#title' => $this->t('Plain text body'),
-            '#collapsible' => TRUE,
-            '#collapsed' => !(PetHelper::hasMimeMail() && $pet->getSendPlain()),
+            '#title' => $this->t('Mime Mail Options'),
+            '#open' => TRUE,
           ];
 
-          $form['mimemail']['body_plain'] = [
-            '#type' => 'textarea',
-            '#title' => $this->t('Plain text body'),
-            '#default_value' => isset($storage['body_plain']) ? $storage['body_plain'] : $pet->getBodyPlain(),
+          $form['mimemail']['body_html'] = [
+            '#type' => 'text_format',
+            '#title' => $this->t('HTML Body'),
+            '#default_value' => isset($storage['body_html']['value']) ? $storage['body_html']['value'] : $pet->getBodyHtml(),
             '#rows' => 15,
-            '#description' => $body_description,
+            '#format' => isset($storage['body_html']['format']) ? $storage['body_html']['format'] : $pet->getFormat(),
+            '#description' => $this->t('The plain text body of the email template. May include tokens of any token type specified below. If left empty Mime Mail will create a plain text version of the email.'),
+          ];
+
+          $form['mimemail']['send_plain'] = [
+            '#type' => 'checkbox',
+            '#title' => $this->t('Send only plain text'),
+            '#default_value' => isset($storage['send_plain']) ? $storage['send_plain'] : $pet->getSendPlain(),
+            '#description' => $this->t('Send email as plain text only. If checked, only the plain text here will be sent. If unchecked both will be sent as multipart mime.'),
           ];
         }
 
         $form['tokens'] = pet_token_help();
+
+        $form['note'] = [
+          '#markup' => '<p>' . $this->t('Review and edit the template before previewing. This will not change the template for future emails, just for this preview.') . '</p>',
+        ];
 
         $form['preview'] = [
           '#type' => 'submit',
@@ -142,10 +146,6 @@ class PetPreviewForm extends FormBase {
         break;
 
       case 2:
-      case 3:
-        $form['info'] = [
-          '#markup' => '<p>' . $this->t("A preview of the email is shown below. If you're satisfied, click Send. If not, click Back to edit the email.") . '</p>',
-        ];
 
         $form['recipients'] = [
           '#title' => $this->t('To'),
@@ -200,6 +200,34 @@ class PetPreviewForm extends FormBase {
           '#disabled' => TRUE,
         ];
 
+        if (PetHelper::hasMimeMail()) {
+          $form['body_html'] = [
+            '#type' => 'textarea',
+            '#title' => $this->t('Raw HTML body'),
+            '#rows' => 15,
+            '#value' => $storage['body_html']['value'],
+            '#disabled' => TRUE,
+          ];
+
+          if (isset($storage['send_plain']) && !$storage['send_plain']) {
+            $form['body_preview_html'] = [
+              '#prefix' => '<div class="form-item form-disabled form-type-pet">',
+              '#suffix' => '</div>',
+              '#type' => 'inline_template',
+              '#template' => '<label>{% trans %}Processed HTML Body{% endtrans %}</label><div class="preview">{{ preview|raw }}</div>',
+              '#context' => [
+                'preview' => $storage['body_preview_html'],
+              ],
+            ];
+
+            $form['#attached'] = [
+              'library' => ['pet/pet.preview'],
+            ];
+          }
+
+
+        }
+
         $form['body'] = [
           '#type' => 'textarea',
           '#title' => $this->t('Body'),
@@ -207,32 +235,6 @@ class PetPreviewForm extends FormBase {
           '#value' => $storage['body_preview'],
           '#disabled' => TRUE,
         ];
-
-        // todo: review when testing html mails.
-        if (PetHelper::hasMimeMail() && !$pet->getSendPlain()) {
-          $form['body_label'] = [
-            '#prefix' => '<div class="pet_body_label">',
-            '#suffix' => '</div>',
-            '#markup' => '<label>' . $this->t('Body as HTML') . '</label>',
-          ];
-
-          $form['body_preview'] = [
-            '#prefix' => '<div class="pet_body_preview">',
-            '#suffix' => '</div>',
-            '#markup' => $storage['body_preview'],
-          ];
-        }
-
-        // todo: review when testing html mails.
-        if (PetHelper::hasMimeMail() && $pet->getSendPlain()) {
-          $form['body_plain'] = [
-            '#type' => 'textarea',
-            '#title' => $this->t('Plain text body'),
-            '#rows' => 15,
-            '#value' => $storage['body_preview_plain'],
-            '#disabled' => TRUE,
-          ];
-        }
 
         $form['back'] = [
           '#type' => 'submit',
@@ -242,7 +244,7 @@ class PetPreviewForm extends FormBase {
 
         $form['submit'] = [
           '#type' => 'submit',
-          '#value' => $this->t('Send email(s)'),
+          '#value' => $this->t('Send email'),
         ];
         break;
     }
@@ -288,7 +290,8 @@ class PetPreviewForm extends FormBase {
         $storage['recipients'] = $values['recipients'];
         $storage['subject'] = $values['subject'];
         $storage['body'] = isset($values['body']) ? $values['body'] : NULL;
-        $storage['body_plain'] = isset($values['body_plain']) ? $values['body_plain'] : NULL;
+        $storage['body_html'] = isset($values['body_html']) ? $values['body_html'] : NULL;
+        $storage['send_plain'] = isset($values['send_plain']) ? $values['send_plain'] : NULL;
         $storage['reply_to'] = $values['reply_to'];
         $storage['cc'] = $values['cc'];
         $storage['bcc'] = $values['bcc'];
@@ -307,12 +310,19 @@ class PetPreviewForm extends FormBase {
         $pet = $storage['pet'];
 
         $pet->setSubject($storage['subject']);
-        $pet->setBody($storage['body']);
-        $pet->setBodyPlain($storage['body_plain']);
+        if (PetHelper::hasMimeMail() && !empty($storage['body'])) {
+          // Let Mime Mail create final plain text version.
+          $pet->setBody($storage['body']);
+        }
+        $pet->setBodyHtml($storage['body_html']['value']);
+        $pet->setSendPlain($storage['send_plain']);
         $pet->setReplyTo($storage['reply_to']);
         $pet->setCc($storage['cc']);
         $pet->setBcc($storage['bcc']);
         $pet->sendMail($recipients, []);
+
+        $storage['step'] = 1;
+        drupal_set_message($this->t('Email(s) sent'));
 
         break;
     }
@@ -462,19 +472,19 @@ class PetPreviewForm extends FormBase {
     $token = \Drupal::token();
 
     $storage['subject_preview'] = $token->replace($values['subject'], $substitutions);
+    $storage['body_preview'] = $token->replace($values['body'], $substitutions);
 
-    if (isset($values['body'])) {
-      $storage['body_preview'] = $token->replace($values['body'], $substitutions);
-    }
-    else {
-      $storage['body_preview'] = NULL;
-    }
+    if (PetHelper::hasMimeMail()) {
+      $storage['body_preview_html'] = $token->replace($values['body_html']['value'], $substitutions);
+      $storage['body_preview_html'] = check_markup($storage['body_preview_html'], $values['body_html']['format']);
 
-    if (isset($values['body_plain'])) {
-      $storage['body_preview_plain'] = $token->replace($values['body_plain'], $substitutions);
-    }
-    else {
-      $storage['body_preview_plain'] = NULL;
+      // @see MimeMailFormatHelper::mimeMailHtmlBody()
+      if (empty($storage['body_preview'])) {
+        // @todo Remove once filter_xss() can handle direct descendant selectors in inline CSS.
+        // @see http://drupal.org/node/1116930
+        // @see http://drupal.org/node/370903
+        $storage['body_preview'] = MailFormatHelper::htmlToText($storage['body_preview_html']);
+      }
     }
 
     $form_state->setStorage($storage);

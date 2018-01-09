@@ -58,19 +58,23 @@ function pet_mail($key, &$message, $params) {
 
   $language_manager->setConfigOverrideLanguage($original_language);
 
-  // Replace tokens, if any.
+  // Set subject and body.
   $message['subject'] = $token->replace($pet->getSubject(), $substitutions, ['clear' => TRUE]);
-  $message['body'][] = $token->replace($pet->getBody(), $substitutions, ['clear' => TRUE]);
 
-  // For mimemail module: alternate text-only form for multipart MIME.
-  // @todo: mimemail integration.
-  /*$mail_body_plain = trim($pet->getBodyPlain());
-  if ($mail_body_plain) {
-    $message['plaintext'] = $token->replace($mail_body_plain, $substitutions, ['clear' => TRUE]);
+  // MimeMail integration.
+  if (PetHelper::hasMimeMail()) {
+    $message['body'][] = $token->replace($pet->getBodyHtml(), $substitutions, ['clear' => TRUE]);
+
+    $mail_body = trim($pet->getBody());
+    if ($mail_body) {
+      $message['params']['plaintext'] = $token->replace($mail_body, $substitutions, ['clear' => TRUE]);
+    }
+
+    $message['params']['plain'] = $pet->getSendPlain();
   }
-  // For mimemail module: send ONLY plain text.
-  //$message['plain'] = $pet->getSendPlain();
-  */
+  else {
+    $message['body'][] = $token->replace($pet->getBody(), $substitutions, ['clear' => TRUE]);
+  }
 }
 
 /*
@@ -95,7 +99,7 @@ function pet_token_help() {
   }
   else {
     $tokens = [
-      '#markup' => '<p>' . new TranslatableMarkup('Enable the <a href="@drupal-token">Token module</a> to view the available token browser.', ['@drupal-token' => 'http://drupal.org/project/token']) . '</p>',
+      '#markup' => '<p>' . new TranslatableMarkup('Enable the <a href="@token" target="_blank">Token module</a> to view the available token browser.', ['@token' => '/admin/modules#module-token']) . '</p>',
     ];
   }
   return $tokens;
