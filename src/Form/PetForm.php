@@ -37,7 +37,7 @@ class PetForm extends ContentEntityForm {
       // Get a valid format.
       $format = $form['format']['widget'][0]['value']['#default_value'];
       if (!$format) {
-        $format_mime = Drupal::config('mimemail.settings')->get('format');
+        $format_mime = \Drupal::config('mimemail.settings')->get('format');
         $format = $format_mime ? $format_mime : filter_fallback_format();
       }
       $form['mail_body_html']['widget'][0]['value']['#format'] = $format;
