@@ -45,7 +45,7 @@ class PetHelper {
     }
 
     // Give modules the opportunity to add their own token types/objects.
-    \Drupal::moduleHandler()->alter('pet_substitutions', $substitutions);
+    \Drupal::moduleHandler()->alter('pet_substitutions', $context, $substitutions);
 
     return $substitutions;
   }

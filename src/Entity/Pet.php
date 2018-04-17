@@ -669,10 +669,6 @@ class Pet extends RevisionableContentEntityBase implements PetInterface {
       // Get user preferred language.
       $preferred_admin_langcode = $user->getPreferredLangcode();
       $langcode = $preferred_admin_langcode ?: $langcode;
-      $params['context']['uid'] = $user->id();
-    }
-    else {
-      $params['context']['uid'] = 0;
     }
 
     if ($this->hasTranslation($langcode)) {
